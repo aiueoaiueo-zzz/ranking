@@ -52,6 +52,8 @@ COLUMNS = [
     ("abt_ct", "アビCT", "アビリティ"),
 ]
 
+EXCLUDE = {"やぎなまず"}
+
 ROLE = {"atk": "アタッカー", "gun": "ガンナー", "spr": "スプリンター", "tnk": "タンク"}
 
 
@@ -69,6 +71,8 @@ def to_num(v):
 
 def build():
     chars = json.loads((ROOT / "data/character.json").read_text(encoding="utf-8"))
+    # ネタ枠のキャラは載せない
+    chars = [c for c in chars if c["name"] not in EXCLUDE]
     chars.sort(key=lambda c: c["num"])
     rows = []
     for c in chars:

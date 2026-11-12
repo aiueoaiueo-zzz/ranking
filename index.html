@@ -2,9 +2,9 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
 <style>
-/* 一枚の大きな数値表。名前列を左に固定し、見出しタップで並べ替える */
+/* 2つの見せ方：スマホは「1項目ランキング」（順位・キャラ・値・棒）、PCは全項目の表。どちらも同じ並べ替え状態を共有 */
 :root {
   --bg: #f3f5f8;
   --surface: #ffffff;
@@ -14,6 +14,7 @@
   --accent: #1f6feb;
   --accent-soft: #e3edfd;
   --sorted: #fff6d6;
+  --bar: #c9dafb;
   --atk: #d4493b; --gun: #2b8a3e; --spr: #c27c0e; --tnk: #3b5bdb;
   --font-text: "M PLUS 1p", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
   --font-num: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -21,14 +22,14 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #11151c; --surface: #181e27; --fg: #e6eaf1; --muted: #98a2b3; --line: #2a3240;
-    --accent: #6ea8ff; --accent-soft: #1d2b44; --sorted: #2e2a17;
+    --accent: #6ea8ff; --accent-soft: #1d2b44; --sorted: #2e2a17; --bar: #27406b;
     --atk: #ff7b6e; --gun: #5fcf73; --spr: #f0b44c; --tnk: #8ea6ff;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #11151c; --surface: #181e27; --fg: #e6eaf1; --muted: #98a2b3; --line: #2a3240;
-  --accent: #6ea8ff; --accent-soft: #1d2b44; --sorted: #2e2a17;
+  --accent: #6ea8ff; --accent-soft: #1d2b44; --sorted: #2e2a17; --bar: #27406b;
   --atk: #ff7b6e; --gun: #5fcf73; --spr: #f0b44c; --tnk: #8ea6ff;
   color-scheme: dark;
 }
@@ -37,32 +38,66 @@ body {
   background: var(--bg); color: var(--fg); font-family: var(--font-text);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 32px;
+  padding-block: 16px 32px;
 }
-.wrap { display: grid; gap: 14px; max-width: 1600px; margin: 0 auto; min-width: 0; }
+.wrap { display: grid; gap: 12px; max-width: 1600px; margin: 0 auto; min-width: 0; }
 header { display: grid; gap: 4px; }
-h1 { font-size: 1.45rem; font-weight: 800; margin: 0; text-wrap: balance; letter-spacing: .01em; }
-.sub { color: var(--muted); font-size: .85rem; margin: 0; }
+h1 { font-size: 1.4rem; font-weight: 800; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: .8rem; margin: 0; }
 .sub a { color: var(--accent); }
-.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.chip, .btn {
-  font: inherit; font-size: .85rem; border: 1px solid var(--line); background: var(--surface);
-  color: var(--fg); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+
+/* 操作パネル */
+.panel { display: grid; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span { font-size: .72rem; color: var(--muted); letter-spacing: .06em; }
+select, input[type="search"] {
+  font: inherit; font-size: 1rem; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--fg); min-width: 0; max-width: 100%;
 }
-.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+#col { min-width: 12em; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button {
+  font: inherit; font-size: .88rem; border: 0; background: var(--bg); color: var(--fg);
+  padding: 8px 12px; cursor: pointer; min-height: 40px;
+}
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 700; }
+.chip {
+  font: inherit; font-size: .82rem; border: 1px solid var(--line); background: var(--bg);
+  color: var(--muted); border-radius: 999px; padding: 6px 12px; cursor: pointer; min-height: 36px;
+}
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); font-weight: 700; }
 .chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
-.btn { border-radius: 8px; }
-.chip:focus-visible, .btn:focus-visible, th button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-input[type="search"] {
-  font: inherit; font-size: .9rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
-  background: var(--surface); color: var(--fg); width: 12em; max-width: 100%;
-}
-label.toggle { display: inline-flex; gap: 6px; align-items: center; font-size: .85rem; color: var(--muted); }
-.status { font-size: .85rem; color: var(--muted); }
+label.toggle { display: inline-flex; gap: 6px; align-items: center; font-size: .82rem; color: var(--muted); min-height: 36px; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.status { font-size: .82rem; color: var(--muted); }
 .status b { color: var(--fg); }
+
+/* 1項目ランキング */
+.rank-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.rank-list li {
+  display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto; gap: 4px 10px; align-items: center;
+  padding: 9px 12px; border-bottom: 1px solid var(--line);
+}
+.rank-list li:last-child { border-bottom: 0; }
+.rank-list .pos { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; font-size: .85rem; }
+.rank-list li.top .pos { color: var(--accent); font-weight: 700; }
+.rank-list .nm { font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; display: flex; align-items: center; gap: 8px; }
+.rank-list .nm small { font-weight: 400; color: var(--muted); font-size: .72rem; }
+.rank-list .role { flex: none; width: 4px; height: 1.1em; border-radius: 2px; }
+.rank-list .val { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1rem; text-align: right; }
+.rank-list .val .multi { display: block; font-size: .7rem; color: var(--muted); font-weight: 400; }
+.rank-list .val.empty { color: var(--muted); opacity: .5; font-weight: 400; }
+.rank-list .bar { grid-column: 2 / 4; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.rank-list .bar i { display: block; height: 100%; background: var(--bar); border-radius: 2px; }
+.rank-list li.top .bar i { background: var(--accent); }
+
+/* 全項目の表 */
 .table-box {
-  overflow: auto; max-height: calc(100vh - 210px); min-height: 320px;
-  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  overflow: auto; max-height: calc(100vh - 120px); min-height: 320px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+  -webkit-overflow-scrolling: touch;
 }
 table { border-collapse: separate; border-spacing: 0; font-size: .82rem; }
 th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -78,68 +113,134 @@ th.sorted, td.sorted { background: var(--sorted); }
 td.num { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 td.empty { color: var(--muted); opacity: .5; }
 td.rank { text-align: right; color: var(--muted); font-family: var(--font-num); font-variant-numeric: tabular-nums; }
-.stick { position: sticky; left: 0; z-index: 1; background: var(--surface); }
-.stick2 { position: sticky; left: 3.2em; z-index: 1; background: var(--surface); border-right: 1px solid var(--line); }
+.stick { position: sticky; left: 0; z-index: 1; background: var(--surface); width: 3em; min-width: 3em; }
+.stick2 { position: sticky; left: 3em; z-index: 1; background: var(--surface); border-right: 1px solid var(--line); }
 thead .stick, thead .stick2 { z-index: 3; }
-td.stick { width: 3.2em; min-width: 3.2em; }
 td.name { font-weight: 700; }
 td.name .role { display: inline-block; width: 4px; height: 1em; border-radius: 2px; margin-right: 8px; vertical-align: -2px; }
 td.name small { color: var(--muted); font-weight: 400; margin-left: 4px; }
 tbody tr:hover td { background: var(--accent-soft); }
 .multi { color: var(--muted); font-size: .72rem; margin-left: 4px; }
-footer { font-size: .78rem; color: var(--muted); display: grid; gap: 4px; }
+
+footer { font-size: .76rem; color: var(--muted); display: grid; gap: 4px; }
 footer p { margin: 0; max-width: 70ch; }
-@media (max-width: 600px) {
-  h1 { font-size: 1.2rem; }
-  .table-box { max-height: calc(100vh - 260px); }
+
+@media (max-width: 640px) {
+  h1 { font-size: 1.15rem; }
+  .sub .hint { display: none; }
+  .panel { padding: 10px; gap: 8px; }
+  .row.main { gap: 6px; }
+  .row.main > .field { flex: 1 1 100%; }
+  .row.main > .field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .seg button { padding: 6px 8px; min-height: 36px; font-size: .84rem; }
+  select { padding: 7px 10px; }
+  td.name { max-width: 8.5em; }
+  #col { width: 100%; }
+  .row.main .seg { flex: 1 1 auto; }
+  .row.main .seg button { flex: 1; }
+  .roles { flex-wrap: nowrap; overflow-x: auto; margin-inline: -12px; padding-inline: 12px; scrollbar-width: none; }
+  .roles .chip { flex: none; }
+  input[type="search"] { flex: 1 1 10em; }
+  table { font-size: .76rem; }
+  th, td { padding: 6px 7px; }
+  td.name { overflow: hidden; text-overflow: ellipsis; }
+  .table-box { max-height: calc(100vh - 80px); }
 }
 </style>
 
 <div class="wrap">
   <header>
     <h1>やぎシミュ キャラ数値表</h1>
-    <p class="sub">見出しをタップすると並べ替えます（1回目 大きい順 → 2回目 小さい順 → 3回目 実装順）。データ提供：<a href="https://yagitools.cloudfree.jp/compas-deck/" target="_blank" rel="noopener">やぎシミュ（チームやぎシミュ）</a></p>
+    <p class="sub"><span class="hint">項目を選ぶか、表の見出しをタップして並べ替えます。</span>データ提供：<a href="https://yagitools.cloudfree.jp/compas-deck/" target="_blank" rel="noopener">やぎシミュ（チームやぎシミュ）</a></p>
   </header>
 
-  <div class="controls" id="roles"></div>
-  <div class="controls">
-    <input type="search" id="q" placeholder="キャラ名で絞り込み" aria-label="キャラ名で絞り込み">
-    <label class="toggle"><input type="checkbox" id="extra"> 別形態も表示（凸違い・HS版など）</label>
-    <button class="btn" id="reset" type="button">実装順に戻す</button>
-    <span class="status" id="status"></span>
+  <div class="panel">
+    <div class="row main">
+      <label class="field"><span>項目</span><select id="col"></select></label>
+      <div class="field"><span>並び順</span>
+        <div class="seg" id="dir">
+          <button type="button" data-dir="-1">大きい順</button>
+          <button type="button" data-dir="1">小さい順</button>
+          <button type="button" data-dir="0">実装順</button>
+        </div>
+      </div>
+      <div class="field"><span>表示</span>
+        <div class="seg" id="view">
+          <button type="button" data-view="one">この項目だけ</button>
+          <button type="button" data-view="all">全項目の表</button>
+        </div>
+      </div>
+    </div>
+    <div class="row roles" id="roles"></div>
+    <div class="row">
+      <input type="search" id="q" placeholder="キャラ名で絞り込み" aria-label="キャラ名で絞り込み">
+      <label class="toggle"><input type="checkbox" id="extra"> 別形態も表示</label>
+      <span class="status" id="status"></span>
+    </div>
   </div>
 
-  <div class="table-box">
+  <ol class="rank-list" id="list" hidden></ol>
+  <div class="table-box" id="tableBox" hidden>
     <table id="t"><thead></thead><tbody></tbody></table>
   </div>
 
   <footer>
-    <p>HS無敵は場面で値が変わるキャラ（例：1.3/5.5）は一番長い値で並べます。空欄はやぎシミュに値がない項目で、並べ替えると常に一番下に来ます。</p>
+    <p>別形態は、マルコスの凸違い・サーティーン(atk)・HS版などの、同じキャラの別データです。</p>
+    <p>HS無敵は場面で値が変わるキャラ（例：1.3/5.5）は一番長い値で並べます。「—」はやぎシミュに値がない項目で、並べ替えると常に一番下に来ます。</p>
     <p>カード欄の「近・周・遠・連・tel」「無・短・長」はやぎシミュの表示アイコンに合わせた区分です。</p>
   </footer>
 </div>
 
 <script>
-const DATA = {"columns":[{"key":"attack","label":"攻撃","group":"基本"},{"key":"defense","label":"防御","group":"基本"},{"key":"physical","label":"体力","group":"基本"},{"key":"speed","label":"移動速度","group":"基本"},{"key":"range","label":"通常射程(m)","group":"通常攻撃"},{"key":"motion","label":"通常倍率","group":"通常攻撃"},{"key":"ulttime","label":"HS時間(秒)","group":"ヒーロースキル"},{"key":"ultdamage","label":"HS倍率","group":"ヒーロースキル"},{"key":"ultinvincible","label":"HS無敵(秒)","group":"ヒーロースキル"},{"key":"ultrange","label":"HS射程","group":"ヒーロースキル"},{"key":"ultsize","label":"HS範囲","group":"ヒーロースキル"},{"key":"hadamage","label":"HA倍率","group":"ヒーローアクション"},{"key":"hastart","label":"HA発生","group":"ヒーローアクション"},{"key":"hastop","label":"HA硬直","group":"ヒーローアクション"},{"key":"harange","label":"HA射程","group":"ヒーローアクション"},{"key":"hasize","label":"HA範囲","group":"ヒーローアクション"},{"key":"sh","label":"近 発生","group":"攻撃カード"},{"key":"ss","label":"近 硬直","group":"攻撃カード"},{"key":"ch","label":"周 発生","group":"攻撃カード"},{"key":"cs","label":"周 硬直","group":"攻撃カード"},{"key":"lh","label":"遠 初弾","group":"攻撃カード"},{"key":"ll","label":"遠 全弾","group":"攻撃カード"},{"key":"ls","label":"遠 硬直","group":"攻撃カード"},{"key":"bh","label":"連 初弾","group":"攻撃カード"},{"key":"bl","label":"連 全弾","group":"攻撃カード"},{"key":"bs","label":"連 硬直","group":"攻撃カード"},{"key":"th","label":"tel 発生","group":"攻撃カード"},{"key":"ts","label":"tel 硬直","group":"攻撃カード"},{"key":"sskill","label":"無 発生","group":"発動カード"},{"key":"sskills","label":"無 硬直","group":"発動カード"},{"key":"mskill","label":"短 発生","group":"発動カード"},{"key":"mskills","label":"短 硬直","group":"発動カード"},{"key":"lskill","label":"長 発生","group":"発動カード"},{"key":"lskills","label":"長 硬直","group":"発動カード"},{"key":"push","label":"プッシュ","group":"ふっとばし"},{"key":"lanch","label":"ランチ","group":"ふっとばし"},{"key":"blast","label":"ブラスト","group":"ふっとばし"},{"key":"abt_mag","label":"アビ倍率","group":"アビリティ"},{"key":"abt_ct","label":"アビCT","group":"アビリティ"}],"roles":{"atk":"アタッカー","gun":"ガンナー","spr":"スプリンター","tnk":"タンク"},"rows":[{"n":1,"name":"十文字アタリ","role":"spr","extra":false,"v":[1.0,1.0,1.0,2.71,4.0,1.0,32.0,2.4,[6.0,null],3.8,null,2.0,1.16,1.33,null,null,0.89,1.96,1.14,3.1,1.61,2.28,3.28,0.75,2.88,3.55,1.8,3.2,0.55,0.95,1.16,1.55,1.68,2.09,2.0,1.0,2.0,null,null]},{"n":2,"name":"ジャスティス ハンコック","role":"tnk","extra":false,"v":[1.5,1.5,0.95,2.21,6.5,1.0,34.0,6.0,[7.34,null],9.0,null,0.0,0.0,0.0,null,null,1.67,4.1,1.1,2.54,1.5,2.18,2.95,0.77,1.77,2.5,1.63,2.69,0.56,0.94,1.17,1.57,1.68,2.09,1.0,9.0,1.0,null,null]},{"n":3,"name":"リリカ","role":"gun","extra":false,"v":[1.2,0.8,0.85,2.52,18.0,1.0,40.0,0.0,[6.0,null],null,null,2.2,0.7,1.7,21.0,1.0,1.67,3.0,1.54,3.67,2.18,2.98,3.68,2.74,4.0,5.34,1.79,3.13,0.44,0.84,0.97,1.37,1.38,1.77,3.0,9.0,3.0,null,null]},{"n":4,"name":"双挽乃保","role":"atk","extra":false,"v":[1.5,1.4,0.9,2.69,4.4,0.7,52.0,0.0,[9.0,null],null,null,10.0,4.06,5.0,4.6,null,1.67,3.44,1.92,4.44,2.28,2.68,3.78,0.84,2.01,2.78,1.26,2.87,0.55,0.96,1.16,1.56,1.68,2.08,4.0,3.0,4.0,null,null]},{"n":5,"name":"桜華忠臣","role":"atk","extra":false,"v":[1.4,0.8,1.15,2.41,4.0,1.0,36.0,100000.0,[7.3,null],76.0,5.0,1.1,1.6,3.2,24.0,1.0,0.86,2.35,1.88,4.77,2.18,2.78,4.45,0.96,2.46,3.78,1.32,3.35,0.57,0.95,1.15,1.55,1.68,2.08,2.0,1.0,2.0,1.33,0.65]},{"n":6,"name":"ジャンヌ ダルク","role":"tnk","extra":false,"v":[1.1,0.8,1.5,2.45,4.0,1.0,74.0,0.0,[7.3,null],null,null,0.0,0.0,0.0,7.0,null,0.89,2.33,1.1,2.94,2.18,2.78,3.44,1.19,2.69,3.95,1.5,3.36,0.55,0.94,1.14,1.56,1.69,2.1,1.0,9.0,1.0,null,null]},{"n":7,"name":"マルコス'55","role":"atk","extra":false,"v":[1.05,1.05,0.8,2.65,4.7,1.0,26.0,0.0,[5.5,"1.3/1.3/5.5"],null,null,1.2,0.53,0.63,44.0,1.5,1.71,2.86,2.0,4.4,2.28,2.95,3.92,1.91,2.5,3.9,1.33,2.95,0.36,0.74,0.75,1.14,1.03,1.43,4.0,3.0,4.0,null,null]},{"n":8,"name":"マルコス'55(1凸)","role":"atk","extra":true,"v":[1.26,1.26,0.8,2.65,4.7,1.0,26.0,0.0,[5.5,"1.3/1.3/5.5"],null,null,1.2,0.53,0.63,44.0,1.5,1.71,2.86,2.0,4.4,2.28,2.95,3.92,1.91,2.5,3.9,1.33,2.95,0.36,0.74,0.75,1.14,1.03,1.43,4.0,3.0,4.0,null,null]},{"n":9,"name":"マルコス'55(2凸)","role":"atk","extra":true,"v":[1.51,1.51,0.8,2.65,4.7,1.0,26.0,0.0,[5.5,"1.3/1.3/5.5"],null,null,1.2,0.53,0.63,44.0,1.5,1.71,2.86,2.0,4.4,2.28,2.95,3.92,1.91,2.5,3.9,1.33,2.95,0.36,0.74,0.75,1.14,1.03,1.43,4.0,3.0,4.0,null,null]},{"n":10,"name":"マルコス'55(3凸)","role":"atk","extra":true,"v":[1.81,1.81,0.8,2.65,4.7,1.0,26.0,0.0,[5.5,"1.3/1.3/5.5"],null,null,1.2,0.53,0.63,44.0,1.5,1.71,2.86,2.0,4.4,2.28,2.95,3.92,1.91,2.5,3.9,1.33,2.95,0.36,0.74,0.75,1.14,1.03,1.43,4.0,3.0,4.0,null,null]},{"n":11,"name":"ルチアーノ","role":"gun","extra":false,"v":[1.3,0.8,0.9,2.19,13.0,0.78,76.0,100000.0,[0.91,null],null,null,2.0,0.43,1.0,16.0,1.0,1.32,2.1,1.37,2.94,1.37,2.04,2.97,0.99,3.78,4.78,1.26,3.27,0.54,0.96,1.16,1.54,1.68,2.07,3.0,9.0,2.0,1.33,0.65]},{"n":12,"name":"Voidoll","role":"spr","extra":false,"v":[0.9,1.45,1.1,2.71,4.0,1.0,28.0,0.0,[3.8,null],null,null,2.0,1.16,1.54,null,null,0.77,1.9,1.1,3.15,1.75,2.41,3.24,0.98,3.09,3.92,1.76,2.99,0.35,0.75,0.76,1.15,1.02,1.41,3.0,2.0,4.0,null,null]},{"n":13,"name":"深川まとい","role":"gun","extra":false,"v":[1.4,0.8,1.0,2.25,15.0,1.0,34.0,0.8,[7.5,null],32.0,null,1.43,0.7,2.5,56.0,4.5,1.04,2.27,1.27,3.1,2.11,2.78,3.31,1.0,2.54,3.27,1.25,2.87,0.55,0.98,1.14,1.54,1.67,2.07,3.0,9.0,2.0,1.4,1.0]},{"n":14,"name":"ソル=バッドガイ","role":"atk","extra":false,"v":[1.45,0.8,1.1,2.52,4.5,1.0,30.0,0.0,[5.3,null],null,null,1.21,1.06,2.5,14.6,1.0,1.15,2.61,1.6,3.1,1.3,1.97,2.77,0.78,1.86,2.27,1.58,3.03,0.56,0.96,1.17,1.54,1.68,2.08,2.0,1.0,2.0,null,null]},{"n":15,"name":"ディズィー","role":"gun","extra":false,"v":[1.3,0.95,0.65,2.72,15.0,1.0,88.0,0.0,[8.0,null],null,null,0.0,0.0,0.0,null,null,1.05,2.04,1.05,2.64,1.87,2.54,3.44,0.95,1.88,2.78,1.46,3.19,0.58,0.95,1.15,1.55,1.69,2.09,3.0,9.0,2.0,null,null]},{"n":16,"name":"グスタフ ハイドリヒ","role":"tnk","extra":false,"v":[1.35,1.5,1.5,2.59,4.6,0.63,50.0,90.0,[6.2,null],null,null,12.0,0.0,0.0,4.4,null,1.6,3.44,0.84,2.44,2.11,2.78,3.78,1.78,3.28,3.77,1.85,3.35,0.55,0.95,1.16,1.57,1.72,2.1,1.0,9.0,1.0,null,null]},{"n":17,"name":"ニコラ テスラ","role":"spr","extra":false,"v":[1.3,0.5,1.4,2.78,4.0,1.0,16.0,1.8,[5.5,"1.5/5.5"],240.0,0.5,2.0,1.13,1.53,null,null,1.37,3.44,1.6,3.77,1.56,2.22,3.28,1.45,2.77,3.44,1.81,3.2,0.55,0.96,1.16,1.56,1.68,2.09,4.0,3.0,4.0,1.0,0.85]},{"n":18,"name":"初音 ミク","role":"spr","extra":false,"v":[1.05,0.7,1.05,2.7,7.0,1.0,48.0,0.0,[7.3,null],6.0,null,2.0,1.27,1.67,null,null,1.3,2.44,1.11,2.64,2.1,2.77,3.77,1.11,2.94,3.78,1.8,3.16,0.56,0.95,1.16,1.54,1.69,2.09,4.0,3.0,4.0,null,null]},{"n":19,"name":"ヴィオレッタ ノワール","role":"tnk","extra":false,"v":[0.95,1.3,1.4,2.6,4.0,1.0,50.0,0.0,[7.3,null],6.0,null,0.0,0.0,0.0,7.6,null,1.6,2.94,1.46,3.44,1.44,2.1,2.9,1.44,2.94,3.44,1.54,3.15,0.55,0.98,1.17,1.57,1.7,2.1,1.0,9.0,1.0,null,null]},{"n":20,"name":"コクリコット ブランシュ","role":"spr","extra":false,"v":[1.45,1.5,0.5,2.78,4.4,1.0,32.0,0.0,[6.7,null],7.0,null,2.0,1.0,1.37,null,null,0.94,1.94,0.97,2.5,2.12,2.79,3.77,1.44,3.54,4.11,1.81,3.2,0.56,0.95,1.14,1.54,1.67,2.07,2.0,2.0,3.0,null,null]},{"n":21,"name":"リュウ","role":"atk","extra":false,"v":[1.35,0.9,1.25,2.48,4.0,1.0,16.0,100.0,[3.5,null],44.0,2.5,0.0,0.0,0.0,null,null,0.94,2.17,1.16,2.95,1.4,2.07,3.11,0.88,1.9,2.84,1.71,3.2,0.55,0.95,1.16,1.55,1.56,1.95,2.0,1.0,2.0,1.11,1.0]},{"n":22,"name":"春麗","role":"spr","extra":false,"v":[1.25,0.95,1.0,2.72,4.2,1.0,32.0,100000.0,[4.3,null],6.0,6.0,2.0,1.17,1.57,null,null,1.34,2.77,1.04,2.9,2.28,2.95,4.12,0.79,1.86,2.52,1.43,3.2,0.56,0.95,1.14,1.55,1.69,2.08,4.0,3.0,4.0,1.25,0.75]},{"n":23,"name":"マリア=S=レオンブルク","role":"atk","extra":false,"v":[1.2,1.45,0.95,2.29,8.6,0.66,52.0,6.0,[8.9,null],4.0,null,1.2,1.53,2.0,32.0,0.44,1.27,2.44,1.32,3.24,2.11,2.78,3.77,0.95,2.45,3.44,1.72,3.21,0.55,0.93,1.14,1.54,1.66,2.06,4.0,3.0,4.0,null,null]},{"n":24,"name":"アダム=ユーリエフ","role":"atk","extra":false,"v":[1.35,0.95,1.05,2.67,4.7,1.0,32.0,0.0,[4.5,null],76.0,3.0,1.9,1.1,2.5,28.0,2.3,0.9,2.1,1.46,3.0,2.13,2.79,3.79,1.62,3.11,4.11,1.8,3.2,0.56,0.95,1.18,1.57,1.72,2.11,4.0,3.0,4.0,1.4,1.0]},{"n":25,"name":"サーティーン(gun)","role":"gun","extra":false,"v":[1.3,0.75,1.0,2.47,14.0,1.0,14.0,0.0,[5.5,null],null,null,1.45,0.43,2.0,17.0,1.0,1.04,2.04,1.07,2.7,1.95,2.61,3.61,1.11,2.6,3.77,1.79,3.14,0.56,0.95,1.15,1.55,1.68,2.08,3.0,9.0,2.0,null,null]},{"n":26,"name":"サーティーン(atk)","role":"atk","extra":true,"v":[1.4,1.4,1.0,2.65,5.5,1.0,14.0,0.0,[5.5,null],null,null,2.6,0.4,2.5,15.0,4.0,1.04,2.04,1.07,2.7,1.95,2.61,3.61,1.11,2.6,3.77,1.79,3.14,0.56,0.95,1.15,1.55,1.68,2.08,2.0,1.0,2.0,null,null]},{"n":27,"name":"かけだし勇者","role":"spr","extra":false,"v":[1.0,1.0,1.0,2.78,4.2,1.0,30.0,0.0,[3.3,null],null,null,0.01,2.0,2.5,null,null,1.06,2.17,1.44,3.24,1.94,2.77,3.77,1.46,3.11,4.11,1.81,3.14,0.55,0.95,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":28,"name":"エミリア","role":"gun","extra":false,"v":[1.4,1.45,0.9,2.59,14.0,0.54,32.0,0.68,[7.2,null],32.0,null,0.0,0.0,0.0,20.0,5.0,0.97,2.09,1.46,3.6,1.4,2.07,3.06,1.63,3.45,4.11,1.8,3.19,0.57,0.95,1.17,1.57,1.69,2.1,3.0,9.0,3.0,null,null]},{"n":29,"name":"レム","role":"atk","extra":false,"v":[1.4,0.9,1.1,2.54,8.0,1.0,54.0,0.0,[5.8,null],null,null,2.0,1.74,2.5,28.0,4.0,1.11,2.45,0.96,2.6,2.11,2.78,4.12,1.28,3.1,3.44,1.75,3.19,0.56,0.95,1.15,1.55,1.68,2.08,4.0,3.0,4.0,null,null]},{"n":30,"name":"カイ=キスク","role":"atk","extra":false,"v":[1.45,0.95,0.95,2.5,4.5,1.0,30.0,4.0,[4.35,null],40.0,3.0,3.5,2.35,3.5,22.6,1.0,0.94,2.21,1.04,2.64,1.34,2.0,3.0,0.84,1.84,2.51,1.8,3.19,0.58,0.96,1.13,1.55,1.68,2.07,2.0,1.0,2.0,null,null]},{"n":31,"name":"メグメグ","role":"gun","extra":false,"v":[1.4,0.75,0.9,2.65,16.0,0.36,14.0,0.88,[7.0,"7/2.9"],null,null,0.715,0.2,0.4,200.0,1.0,0.97,2.14,1.78,4.41,1.33,2.0,2.84,1.1,2.94,3.4,1.8,3.19,0.56,0.95,1.14,1.54,1.67,2.08,3.0,9.0,3.0,null,null]},{"n":32,"name":"鏡音 リン","role":"gun","extra":false,"v":[1.4,0.95,0.95,2.58,16.0,1.0,38.0,0.0,[7.7,null],14.0,null,0.0,0.0,0.0,32.0,10.0,1.04,2.37,1.44,3.6,1.47,2.14,2.84,0.94,2.27,3.1,1.79,3.15,0.56,0.96,1.14,1.53,1.69,2.08,3.0,9.0,3.0,null,null]},{"n":33,"name":"鏡音 レン","role":"tnk","extra":false,"v":[0.95,1.35,1.35,2.61,7.0,1.0,48.0,2.5,[7.1,null],null,null,0.0,0.0,0.0,null,null,1.45,3.1,1.12,2.76,1.95,2.61,3.6,1.29,2.95,3.78,1.8,3.2,0.56,0.96,1.15,1.54,1.66,2.07,1.0,9.0,1.0,null,null]},{"n":34,"name":"イスタカ","role":"gun","extra":false,"v":[1.2,0.6,1.25,2.36,13.0,1.0,34.0,2.2,[4.0,null],8.0,null,0.767,0.6,0.9,null,null,0.97,2.1,1.6,3.77,1.79,2.45,3.45,1.78,3.11,3.78,1.8,3.19,0.54,0.95,1.14,1.56,1.69,2.08,3.0,9.0,2.0,null,null]},{"n":35,"name":"ザック&レイチェル","role":"spr","extra":false,"v":[1.25,0.95,0.9,2.67,5.0,1.0,34.0,99999.0,[5.3,null],null,null,2.0,1.26,1.66,null,null,0.94,2.04,1.6,3.77,1.94,2.6,3.6,1.61,3.27,4.1,1.73,3.19,0.54,0.94,1.15,1.54,1.68,2.08,3.0,2.0,3.0,null,null]},{"n":36,"name":"輝龍院きらら","role":"spr","extra":false,"v":[0.95,0.8,0.85,2.71,4.4,1.0,26.0,4.0,[9.0,null],null,null,2.0,1.16,1.56,null,null,0.97,1.94,1.77,3.77,1.6,2.27,3.44,0.77,2.54,2.6,1.83,3.19,0.57,0.98,1.15,1.56,1.69,2.09,4.0,2.0,3.0,null,null]},{"n":37,"name":"モノクマ","role":"tnk","extra":false,"v":[1.3,1.45,0.95,2.67,4.3,1.0,34.0,99999.0,[9.2,"9.2/7"],40.0,9.6,0.0,0.0,0.0,7.0,null,1.07,2.5,1.28,3.61,1.78,2.45,3.44,1.27,2.77,3.77,1.81,3.21,0.54,0.94,1.17,1.55,1.68,2.09,1.0,9.0,1.0,null,null]},{"n":38,"name":"ポロロッチョ","role":"atk","extra":false,"v":[1.45,0.65,0.9,2.56,4.3,1.0,56.0,2.4,[7.8,null],12.0,null,1.7,0.61,1.0,null,null,1.06,2.45,1.44,3.44,1.51,2.18,2.78,0.96,2.45,3.27,1.79,3.19,0.56,0.96,1.15,1.55,1.68,2.08,2.0,1.0,2.0,null,null]},{"n":39,"name":"アクア","role":"spr","extra":false,"v":[1.1,1.1,1.1,2.7,4.0,1.0,32.0,0.5,[6.0,null],null,null,3.5,1.3,1.7,null,null,1.07,2.24,1.61,3.28,1.37,2.04,3.0,1.45,2.79,4.11,1.8,3.2,0.56,0.95,1.17,1.57,1.71,2.11,4.0,3.0,4.0,null,null]},{"n":40,"name":"めぐみん","role":"tnk","extra":false,"v":[0.95,1.35,1.5,2.64,4.0,1.0,106.0,999.0,[9.5,null],10.0,null,0.0,0.0,0.0,null,null,0.94,2.04,1.1,2.67,2.11,2.77,4.11,1.29,3.3,3.96,1.8,3.2,0.57,0.96,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":41,"name":"ソーン=ユーリエフ","role":"gun","extra":false,"v":[1.2,1.45,0.7,2.51,18.0,1.0,50.0,0.0,[7.9,null],5.0,null,3.3,0.7,1.9,16.0,2.3,1.5,2.94,0.88,2.25,1.84,2.51,3.61,1.38,3.45,4.12,1.81,3.2,0.54,0.95,1.24,1.64,1.77,2.17,3.0,9.0,3.0,null,null]},{"n":42,"name":"リヴァイ","role":"atk","extra":false,"v":[1.35,1.3,0.95,2.68,4.5,1.0,28.0,100000.0,[7.6,"4.7/7.6"],66.0,2.4,1.8,1.7,2.6,23.0,3.0,1.38,2.84,1.6,3.27,2.01,2.68,3.94,0.78,2.1,2.6,1.79,3.2,0.56,0.96,1.13,1.53,1.67,2.06,4.0,3.0,4.0,null,null]},{"n":43,"name":"デビルミント鬼龍 デルミン","role":"atk","extra":false,"v":[1.4,1.25,0.9,2.56,4.5,1.0,38.0,2.7,[7.1,null],50.0,8.0,0.0,0.0,0.0,null,null,0.94,2.34,1.79,3.63,1.87,2.54,3.64,1.19,2.86,3.61,1.8,3.2,0.56,0.96,1.14,1.54,1.67,2.07,2.0,1.0,2.0,null,null]},{"n":44,"name":"トマス","role":"tnk","extra":false,"v":[1.4,0.65,1.4,2.16,4.3,1.0,68.0,1.2,[6.7,null],7.0,null,0.0,0.0,0.0,null,null,0.97,2.26,1.31,3.18,2.18,2.85,3.95,0.77,1.84,2.65,1.54,3.03,0.55,0.95,1.17,1.57,1.71,2.11,1.0,9.0,1.0,null,null]},{"n":45,"name":"猫宮ひなた(AR)","role":"gun","extra":false,"v":[1.5,1.4,0.75,2.67,18.0,0.41,36.0,1000000.0,[7.0,null],null,null,2.2,1.01,2.0,40.0,3.0,0.94,2.14,1.84,4.28,1.64,2.31,3.52,1.31,2.71,3.61,1.79,3.19,0.56,0.95,1.17,1.57,1.7,2.11,3.0,9.0,2.0,null,null]},{"n":46,"name":"猫宮ひなた(SG)","role":"gun","extra":true,"v":[1.5,1.4,0.75,2.75,8.0,1.0,36.0,1000000.0,[7.0,null],null,null,2.2,1.01,2.0,40.0,3.0,0.94,2.14,1.84,4.28,1.64,2.31,3.52,1.31,2.71,3.61,1.79,3.19,0.56,0.95,1.17,1.57,1.7,2.11,3.0,9.0,2.0,null,null]},{"n":47,"name":"岡部 倫太郎","role":"gun","extra":false,"v":[1.3,0.6,0.95,2.53,14.0,1.0,46.0,0.0,[11.0,null],null,null,0.8,1.4,2.6,null,null,0.94,2.27,1.62,3.77,1.67,2.34,3.44,0.8,1.9,2.84,1.81,3.21,0.56,0.95,1.13,1.53,1.66,2.07,3.0,9.0,2.0,null,null]},{"n":48,"name":"零夜","role":"spr","extra":false,"v":[1.45,1.4,0.9,2.77,7.5,1.0,30.0,1.3,[5.0,null],5.0,null,2.0,1.16,1.36,null,null,1.64,2.84,1.5,3.6,1.5,2.17,2.57,0.9,2.37,2.97,1.81,3.2,0.55,0.94,1.15,1.54,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":49,"name":"セイバーオルタ","role":"atk","extra":false,"v":[1.5,1.35,0.95,2.68,4.5,1.0,72.0,99999.0,[8.2,null],100.0,3.0,2.0,0.7,1.3,12.0,1.0,0.94,2.18,1.04,2.7,2.19,2.85,3.84,1.24,2.94,3.64,1.8,3.2,0.58,0.96,1.14,1.54,1.68,2.08,2.0,1.0,2.0,null,null]},{"n":50,"name":"ギルガメッシュ","role":"gun","extra":false,"v":[1.5,0.9,1.2,2.13,18.0,0.45,52.0,99999.0,[10.0,null],8.0,null,0.0,0.0,0.0,18.0,3.5,1.64,3.1,1.95,3.81,1.52,2.18,3.18,0.77,1.84,2.57,1.79,3.19,0.56,0.97,1.14,1.54,1.67,2.07,3.0,9.0,2.0,null,null]},{"n":51,"name":"ルルカ","role":"atk","extra":false,"v":[1.35,0.95,1.05,2.54,4.5,1.0,26.0,2.0,[6.0,null],16.0,4.0,3.0,0.77,1.3,9.2,4.0,0.93,2.24,1.54,2.96,1.59,2.25,3.17,0.77,1.9,2.47,1.8,3.19,0.55,0.94,1.14,1.55,1.66,2.06,4.0,3.0,4.0,null,null]},{"n":52,"name":"ピエール77世","role":"spr","extra":false,"v":[0.5,0.5,1.5,2.76,4.0,1.0,34.0,0.0,[6.88,null],null,null,1.0,1.46,1.94,null,null,0.99,2.51,1.08,2.91,1.88,2.55,3.45,0.8,3.28,4.11,1.79,3.19,0.57,0.97,1.14,1.54,1.67,2.07,2.0,2.0,3.0,null,null]},{"n":53,"name":"ピエール77世(HS)","role":"spr","extra":true,"v":[2.0,1.5,1.5,3.86,8.0,1.0,34.0,0.0,[6.88,null],null,null,1.0,1.46,1.94,null,null,0.99,2.51,1.08,2.91,1.88,2.55,3.45,0.8,3.28,4.11,1.79,3.19,0.57,0.97,1.14,1.54,1.67,2.07,2.0,2.0,3.0,null,null]},{"n":54,"name":"佐藤四郎兵衛忠信","role":"tnk","extra":false,"v":[1.45,0.95,1.3,2.56,4.3,1.0,44.0,0.0,[8.4,null],10.0,null,1.0,0.53,0.8,10.0,2.5,1.15,2.57,1.38,3.27,2.18,2.85,3.61,0.84,2.14,2.94,1.54,3.04,0.56,0.97,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":56,"name":"アイズ・ヴァレンシュタイン","role":"atk","extra":false,"v":[1.45,1.4,0.7,2.59,4.7,1.0,22.0,1.4,[3.98,null],40.0,2.5,2.6,0.8,2.0,20.0,2.0,1.24,2.1,0.99,2.29,2.13,2.78,3.11,0.77,1.9,2.3,1.81,3.21,0.55,0.95,1.16,1.56,1.7,2.09,2.0,1.0,2.0,null,null]},{"n":57,"name":"狐ヶ咲 甘色","role":"atk","extra":false,"v":[1.3,0.75,0.9,2.64,4.15,1.0,38.0,0.0,[6.0,null],20.0,14.0,2.7,0.8,2.0,8.6,5.0,0.94,2.1,1.5,3.6,1.48,2.14,3.1,1.28,2.94,3.77,1.79,3.19,0.55,0.95,1.16,1.55,1.7,2.09,4.0,3.0,4.0,null,null]},{"n":58,"name":"ノクティス","role":"atk","extra":false,"v":[1.4,1.2,0.95,2.61,5.0,1.0,38.0,99999.0,[7.2,null],16.0,8.0,1.5,0.7,2.0,34.0,3.5,0.94,2.0,1.74,3.64,1.4,2.07,2.9,1.22,2.96,3.27,1.27,2.86,0.56,0.95,1.17,1.57,1.7,2.09,3.0,2.0,3.0,null,null]},{"n":59,"name":"ニーズヘッグ","role":"gun","extra":false,"v":[1.45,1.35,0.95,2.7,15.0,0.42,54.0,4.0,[11.0,null],7.0,null,0.68,1.4,1.67,200.0,1.0,0.94,2.34,1.94,4.11,1.4,2.07,2.87,0.86,1.91,2.95,1.8,3.2,0.56,0.95,1.16,1.56,1.7,2.09,3.0,9.0,2.0,null,null]},{"n":60,"name":"中島 敦","role":"spr","extra":false,"v":[1.3,0.85,1.15,2.76,4.7,1.0,28.0,0.0,[5.17,null],null,null,2.0,1.26,1.74,null,null,0.94,2.1,1.59,3.65,2.22,2.88,3.89,0.84,2.1,2.77,1.8,3.2,0.56,0.95,1.17,1.57,1.7,2.1,4.0,1.0,3.0,null,null]},{"n":61,"name":"芥川 龍之介","role":"gun","extra":false,"v":[1.45,1.35,0.8,2.41,15.0,1.0,32.0,100000.0,[5.73,null],24.0,4.0,0.44,0.9,1.7,29.0,1.0,1.58,3.04,0.97,2.44,1.44,2.1,3.1,1.31,2.98,3.61,1.8,3.2,0.57,0.97,1.15,1.54,1.69,2.08,3.0,9.0,2.0,null,null]},{"n":62,"name":"ゲームバズーカガール","role":"gun","extra":false,"v":[1.35,0.8,1.0,2.63,16.0,1.0,34.0,4.0,[8.72,null],200.0,4.0,1.85,0.45,1.4,22.0,2.5,0.99,2.47,1.09,2.96,1.35,2.0,2.94,1.6,2.94,3.6,1.79,3.2,0.55,0.96,1.16,1.56,1.69,2.06,0.0,9.0,2.0,null,null]},{"n":63,"name":"ライザリン・シュタウト","role":"tnk","extra":false,"v":[1.4,0.95,1.4,2.54,4.3,1.0,34.0,99999.0,[8.07,null],40.0,4.0,1.0,1.8,2.3,8.0,4.0,1.14,2.44,1.17,2.97,1.57,2.28,3.1,1.27,3.27,3.77,1.8,3.15,0.56,0.96,1.15,1.55,1.7,2.1,1.0,9.0,1.0,null,null]},{"n":64,"name":"青春 アリス","role":"tnk","extra":false,"v":[0.75,0.6,1.45,2.65,4.0,1.0,52.0,0.0,[6.25,null],null,null,1.0,0.55,0.92,null,null,0.94,2.11,1.57,3.27,1.6,2.28,3.17,1.5,2.84,3.94,1.8,3.19,0.56,0.96,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":65,"name":"ジョーカー","role":"spr","extra":false,"v":[1.35,1.25,0.9,2.69,4.7,1.0,20.0,0.0,[7.34,null],null,null,1.0,1.16,1.36,null,null,0.94,2.29,1.0,2.7,1.67,2.34,3.1,1.61,2.22,3.12,1.27,2.87,0.56,0.96,1.15,1.54,1.69,2.08,3.0,3.0,2.0,null,null]},{"n":66,"name":"イグニス=ウィル=ウィスプ","role":"atk","extra":false,"v":[1.25,0.9,1.25,2.69,4.8,1.0,34.0,100000.0,[6.72,null],5.0,null,2.4,2.0,4.0,38.0,0.65,0.97,2.4,1.0,2.64,2.14,2.8,4.04,1.51,2.84,3.94,1.75,3.13,0.55,0.96,1.14,1.54,1.67,2.07,2.0,1.0,2.0,null,null]},{"n":67,"name":"アインズ・ウール・ゴウン","role":"gun","extra":false,"v":[1.4,1.4,0.9,2.14,14.0,0.29,32.0,100000.0,[7.05,null],10.0,null,0.0,0.0,0.0,26.0,1.0,0.97,2.37,1.69,3.61,1.44,2.1,2.84,1.47,3.04,3.77,1.79,3.14,0.55,0.95,0.55,0.95,0.55,0.95,3.0,9.0,3.0,null,null]},{"n":68,"name":"糸廻 輪廻","role":"gun","extra":false,"v":[1.4,0.7,1.0,2.58,15.0,0.48,32.0,6.0,[8.55,null],9.0,null,0.48,2.15,4.52,20.0,2.5,1.51,2.81,1.72,3.74,1.55,2.23,3.25,0.96,2.28,3.28,1.8,3.1,0.55,0.96,1.14,1.54,1.67,2.07,2.0,9.0,2.0,1.33,0.9]},{"n":69,"name":"キリト","role":"atk","extra":false,"v":[1.45,0.85,1.05,2.61,4.3,1.0,42.0,4.0,[6.0,null],26.0,10.0,1.45,0.7,1.3,12.0,1.0,1.08,2.52,1.04,2.27,2.1,2.77,3.77,0.79,1.84,2.51,1.8,3.21,0.56,0.97,1.14,1.54,1.68,2.08,4.0,3.0,4.0,null,null]},{"n":70,"name":"アスナ","role":"spr","extra":false,"v":[1.35,1.35,0.95,2.71,4.3,1.0,30.0,99999.0,[4.35,null],36.0,2.5,0.82,1.16,1.33,null,null,1.26,2.46,1.62,3.62,1.44,2.1,3.11,0.78,1.84,2.44,1.8,3.2,0.56,0.96,1.14,1.54,1.67,2.08,4.0,3.0,3.0,null,null]},{"n":71,"name":"Bugdoll","role":"gun","extra":false,"v":[1.35,1.45,0.8,2.52,15.0,1.0,44.0,1.5,[10.05,null],200.0,10.8,0.57,1.3,1.5,29.0,8.0,1.31,2.64,1.77,3.44,1.4,2.07,3.04,0.78,1.91,3.17,1.66,2.99,0.36,0.77,0.74,1.14,1.01,1.4,3.0,9.0,2.0,null,null]},{"n":72,"name":"ステリア・ララ・シルワ","role":"atk","extra":false,"v":[1.4,1.45,0.95,2.08,6.5,1.0,44.0,4.5,[4.8,null],5.0,null,0.97,1.7,3.2,40.0,1.0,1.17,2.54,1.57,3.67,1.5,2.17,3.0,0.77,1.77,2.37,1.8,3.14,0.54,0.96,1.14,1.54,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":73,"name":"ラム","role":"spr","extra":false,"v":[1.4,0.75,1.35,2.69,8.0,1.0,36.0,0.0,[7.07,null],null,null,2.0,1.16,1.33,null,null,0.94,2.34,1.04,2.67,1.44,2.1,2.87,1.61,2.95,3.6,1.81,3.21,0.56,0.97,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":74,"name":"2B","role":"atk","extra":false,"v":[1.35,1.25,0.85,2.54,4.0,1.0,40.0,1.0,[6.3,null],20.0,1.0,2.2,2.3,3.4,20.0,2.0,0.94,2.27,1.77,3.1,1.62,2.28,3.11,0.89,1.96,2.79,1.8,3.21,0.57,0.96,1.17,1.57,1.7,2.1,4.0,3.0,3.0,null,null]},{"n":75,"name":"ラヴィ・シュシュマルシュ","role":"tnk","extra":false,"v":[1.45,0.5,1.45,2.56,4.0,1.0,36.0,20.0,[6.6,null],10.0,null,0.2,0.0,0.0,8.0,null,0.97,2.46,1.1,2.9,1.5,2.17,3.04,1.65,3.31,3.98,1.79,3.14,0.56,0.96,1.17,1.57,1.7,2.1,1.0,9.0,1.0,null,null]},{"n":76,"name":"リムル=テンペスト","role":"atk","extra":false,"v":[1.45,0.85,1.05,2.6,4.3,1.0,38.0,100000.0,[5.8,null],10.0,5.11,1.3,2.3,3.6,16.0,2.3,0.94,2.01,1.07,2.54,1.94,2.61,3.45,1.45,2.78,3.28,1.81,3.21,0.56,0.95,1.16,1.57,1.7,2.1,4.0,3.0,4.0,null,null]},{"n":77,"name":"アル・ダハブ＝アルカティア","role":"spr","extra":false,"v":[1.1,0.0,1.2,2.69,5.0,1.0,36.0,200.0,[4.34,null],26.0,8.0,1.0,1.16,1.2,null,null,0.96,2.26,1.45,3.24,1.44,2.1,2.77,1.11,2.94,3.78,1.81,3.21,0.56,0.95,1.18,1.58,1.7,2.1,3.0,2.0,3.0,null,null]},{"n":78,"name":"御坂美琴","role":"atk","extra":false,"v":[1.3,0.75,1.05,2.64,7.0,0.53,42.0,100000.0,[6.35,null],50.0,3.0,2.5,0.6,1.6,8.0,null,0.98,2.6,1.07,2.87,1.38,2.04,2.64,1.5,3.37,3.94,1.45,2.92,0.56,0.95,1.16,1.55,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":79,"name":"アクセラレータ","role":"gun","extra":false,"v":[1.5,1.5,0.45,2.43,13.0,1.0,60.0,10.0,[6.0,null],10.0,4.0,1.0,1.1,1.4,16.0,2.3,0.94,2.1,1.03,2.33,2.27,2.94,4.1,0.8,1.93,2.67,1.8,3.19,0.56,0.95,1.17,1.57,1.7,2.1,3.0,9.0,3.0,null,null]},{"n":80,"name":"ぶれいずどらごん","role":"gun","extra":false,"v":[1.15,0.8,1.2,2.56,18.0,1.0,48.0,100000.0,[10.0,null],86.0,4.0,2.0,1.9,3.5,null,null,1.01,2.18,1.94,4.1,1.44,2.1,3.1,1.32,2.98,3.65,1.8,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,9.0,2.0,null,null]},{"n":81,"name":"ベル・クラネル","role":"spr","extra":false,"v":[1.45,0.9,0.95,2.72,4.0,0.77,28.0,4.5,[4.8,null],28.0,3.0,1.8,1.16,3.4,null,null,0.98,2.1,1.45,2.71,1.3,1.97,2.64,1.44,2.5,3.04,1.8,3.19,0.56,0.94,1.17,1.57,1.67,2.07,2.0,2.0,3.0,null,null]},{"n":82,"name":"ロキシー・ミグルディア","role":"gun","extra":false,"v":[1.35,1.35,0.95,2.43,15.0,1.0,66.0,0.0,[8.0,null],null,null,3.0,0.6,1.66,40.0,4.0,1.28,2.78,1.07,2.6,1.4,2.07,2.77,1.44,2.77,3.44,1.79,3.19,0.56,0.94,1.17,1.57,1.7,2.1,3.0,9.0,3.0,null,null]},{"n":83,"name":"某＜なにがし＞","role":"spr","extra":false,"v":[1.4,0.55,1.0,2.69,4.5,1.0,40.0,1.5,[4.0,null],50.0,1.5,2.0,1.16,1.33,null,null,1.1,2.6,1.04,2.6,1.77,2.44,3.44,0.87,1.94,2.77,1.79,3.19,0.54,0.94,1.2,1.6,1.74,2.14,3.0,2.0,3.0,null,0.65]},{"n":84,"name":"ロックマン.EXE&光熱斗","role":"gun","extra":false,"v":[1.4,1.1,0.9,2.59,15.0,1.0,28.0,100000.0,[4.56,null],30.0,2.0,1.1,0.6,1.0,26.0,1.5,0.96,2.11,1.04,2.64,1.37,2.04,3.0,0.87,2.04,2.77,1.27,2.86,0.54,0.94,1.17,1.57,1.71,2.11,3.0,9.0,4.0,null,null]},{"n":85,"name":"クー・シー","role":"atk","extra":false,"v":[1.05,1.5,0.55,2.78,5.5,1.0,26.0,0.0,[4.66,null],null,null,1.0,0.0,0.0,24.0,10.0,0.88,2.15,1.74,4.07,2.24,2.9,3.91,0.98,2.64,4.4,1.59,2.99,0.37,0.76,0.74,1.14,1.01,1.4,3.0,2.0,3.0,null,null]},{"n":86,"name":"デンジ","role":"atk","extra":false,"v":[1.5,0.6,1.0,2.62,4.4,0.65,36.0,100000.0,[8.16,null],null,null,2.5,0.55,2.0,22.0,6.0,0.98,2.17,1.6,3.27,2.17,2.84,3.94,0.77,1.9,2.27,1.79,3.19,0.56,0.94,1.17,1.57,1.7,2.1,3.0,2.0,4.0,null,null]},{"n":87,"name":"パワー","role":"spr","extra":false,"v":[1.25,0.85,1.0,2.66,4.0,1.0,48.0,5.0,[7.9,null],20.0,10.0,2.5,1.16,1.33,10.0,4.0,0.94,2.27,1.14,2.84,2.17,2.84,3.85,1.62,3.11,4.11,1.83,3.2,0.56,0.94,1.16,1.56,1.67,2.07,3.0,2.0,4.0,null,null]},{"n":88,"name":"アミスター=バランディン","role":"tnk","extra":false,"v":[1.45,1.35,0.95,2.28,6.4,1.0,56.0,0.0,[5.84,null],null,null,0.0,0.55,0.92,null,null,0.92,2.45,1.57,3.5,1.45,2.1,3.01,0.8,1.93,2.56,1.8,3.19,0.56,0.96,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":89,"name":"アミスター=バランディン(HS)","role":"tnk","extra":true,"v":[4.35,5.4,0.95,3.65,6.4,1.0,56.0,0.0,[5.84,null],null,null,2.0,1.16,1.33,null,null,0.92,2.45,1.57,3.5,1.45,2.1,3.01,0.8,1.93,2.56,1.8,3.19,0.56,0.96,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":90,"name":"シノン","role":"gun","extra":false,"v":[0.95,0.9,0.95,2.54,18.0,1.0,44.0,100000.0,[6.0,null],200.0,1.0,1.5,0.7,1.7,40.0,0.33,1.44,2.94,1.7,3.77,1.3,1.97,2.64,1.64,2.98,3.51,1.79,3.19,0.56,0.94,1.14,1.54,1.67,2.07,3.0,9.0,4.0,null,null]},{"n":91,"name":"ターニャ・デグレチャフ","role":"atk","extra":false,"v":[1.4,0.5,0.9,2.69,9.0,0.46,58.0,100000.0,[8.0,null],19.0,null,1.6,0.77,1.7,17.0,3.0,0.97,2.2,1.04,2.47,1.8,2.47,3.37,0.84,2.04,2.57,1.79,3.19,0.54,0.94,1.1,1.5,1.65,2.05,3.0,2.0,3.0,null,null]},{"n":92,"name":"鬼ヶ式 うら","role":"tnk","extra":false,"v":[1.4,0.7,1.4,2.59,5.5,0.46,50.0,100000.0,[8.0,null],34.0,null,1.0,0.55,0.92,13.0,null,1.32,2.99,0.94,2.45,2.27,2.94,4.1,1.37,2.37,4.77,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":93,"name":"コラプス","role":"atk","extra":false,"v":[1.3,1.4,0.85,2.48,4.3,1.0,42.0,2.0,[6.66,null],38.0,9.0,0.5,0.43,1.7,40.0,1.0,0.9,2.0,1.87,4.44,2.17,3.0,4.44,2.44,3.77,5.44,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,3.0,2.0,null,null]},{"n":94,"name":"ボンドルド","role":"atk","extra":false,"v":[1.45,0.95,1.3,2.07,7.0,1.0,26.0,100000.0,[4.0,null],10.0,2.0,1.0,1.06,2.0,10.0,3.0,1.18,2.58,1.57,3.67,1.4,2.07,2.84,0.87,1.9,2.88,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,3.0,2.0,null,null]},{"n":95,"name":"みりぽゆ","role":"gun","extra":false,"v":[1.4,0.7,1.0,2.58,12.0,0.37,30.0,0.27,[6.0,"6/2"],null,null,0.54,1.0,2.0,17.0,2.5,0.95,2.38,1.3,3.3,1.44,2.1,2.94,1.37,2.37,3.77,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,3.0,9.0,4.0,null,null]},{"n":96,"name":"ゴン=フリークス","role":"atk","extra":false,"v":[1.5,0.9,1.2,2.59,4.3,1.0,56.0,0.0,[9.0,null],null,null,1.2,0.3,1.2,14.0,1.5,0.94,2.1,1.04,2.7,2.17,2.84,3.5,1.18,2.85,3.35,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,1.0,2.0,1.55,0.6]},{"n":97,"name":"ゴンさん(HS)","role":"atk","extra":true,"v":[12.0,10.8,1.2,3.63,4.3,1.0,56.0,0.0,[9.0,null],null,null,2.0,0.3,1.2,20.0,4.3,0.94,2.1,1.04,2.7,2.17,2.84,3.5,1.18,2.85,3.35,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,1.0,2.0,1.55,0.6]},{"n":98,"name":"キルア=ゾルディック","role":"spr","extra":false,"v":[1.3,0.9,0.85,2.73,4.0,1.0,40.0,0.0,[5.3,null],null,null,2.0,1.16,1.67,null,null,0.94,2.1,1.04,2.74,1.44,2.1,3.1,0.9,2.27,3.27,1.25,2.89,0.54,0.94,1.14,1.54,1.67,2.07,4.0,3.0,3.0,null,null]},{"n":99,"name":"チーちゃん","role":"spr","extra":false,"v":[1.0,0.55,0.95,2.67,4.0,1.0,46.0,1.8,[10.0,null],null,null,0.45,1.16,3.46,null,null,1.1,2.77,1.27,3.1,1.45,2.1,2.77,1.04,2.6,3.28,1.83,3.2,0.54,0.94,1.14,1.54,1.67,2.07,3.0,2.0,4.0,null,null]},{"n":100,"name":"チーちゃん(BD)","role":"spr","extra":true,"v":[1.0,0.55,0.95,4.17,4.0,1.0,46.0,1.8,[10.0,null],null,null,0.45,1.16,3.46,null,null,0.94,2.44,1.04,2.7,1.37,1.94,2.6,0.85,2.27,2.95,1.83,3.2,0.54,0.94,1.14,1.54,1.67,2.07,3.0,2.0,4.0,null,1.0]},{"n":101,"name":"上条当麻","role":"spr","extra":false,"v":[1.05,0.5,1.1,2.6,4.0,1.0,48.0,100000.0,[9.5,null],4.0,20.0,2.0,1.16,1.67,null,null,0.89,2.14,1.24,3.34,2.1,2.8,4.04,1.6,3.27,4.96,1.82,2.95,0.54,0.94,1.14,1.54,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":102,"name":"ーペルリニエ","role":"spr","extra":false,"v":[1.1,1.2,0.85,2.52,5.5,1.0,46.0,0.0,[7.0,null],20.0,10.0,0.52,1.16,1.67,null,null,0.97,2.37,1.14,3.04,1.47,2.14,2.9,0.8,1.92,2.6,1.82,3.29,0.54,0.94,1.13,1.53,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":103,"name":"シャドウ","role":"atk","extra":false,"v":[1.4,0.75,0.95,2.54,4.0,1.0,52.0,100000.0,[7.1,null],15.0,null,0.0,0.0,0.0,22.0,5.0,0.94,2.17,1.0,2.57,2.11,2.45,3.78,1.44,3.11,4.28,1.25,2.85,0.55,0.94,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":104,"name":"ポプ子&ピピ美","role":"tnk","extra":false,"v":[1.45,0.9,1.35,2.56,6.4,1.0,34.0,100000.0,[9.7,null],8.0,null,1.4,0.0,0.0,3.0,null,1.0,2.5,1.37,3.7,1.4,2.07,2.7,0.97,2.3,2.84,1.79,3.19,0.55,0.95,1.14,1.54,1.68,2.08,1.0,9.0,1.0,null,null]},{"n":105,"name":"メルーニャ・ランチェルナ","role":"gun","extra":false,"v":[1.0,1.4,0.95,2.56,18.0,1.0,16.0,100000.0,[8.9,"1.3/8.9"],200.0,5.0,2.6,1.5,2.24,54.0,2.0,1.34,3.0,1.5,3.16,1.99,2.66,4.33,1.34,2.67,3.34,1.29,2.92,0.45,0.85,0.94,1.34,1.34,1.74,3.0,9.0,3.0,null,null]},{"n":106,"name":"セイバー","role":"spr","extra":false,"v":[1.35,0.7,1.1,2.67,4.0,1.0,38.0,100000.0,[10.0,null],40.0,12.0,1.3,1.16,1.67,null,null,0.94,2.27,1.6,3.1,1.8,1.8,3.37,1.44,4.27,5.1,1.81,3.19,0.54,0.94,1.14,1.54,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":107,"name":"アーチャー","role":"atk","extra":false,"v":[1.5,1.4,0.95,2.54,5.0,1.0,50.0,100000.0,[10.0,null],28.0,4.0,0.4,0.44,1.2,20.0,8.0,0.96,2.18,1.03,2.63,2.54,3.07,4.2,0.88,1.91,2.84,1.25,3.19,0.54,0.94,1.14,1.54,1.67,2.06,4.0,3.0,4.0,1.0,0.65]},{"n":108,"name":"ランサー","role":"gun","extra":false,"v":[1.2,0.75,0.9,2.47,16.0,0.5,46.0,100000.0,[10.0,null],8.0,null,0.0,0.45,1.2,22.0,3.0,1.57,3.04,1.08,2.94,1.4,2.07,3.1,0.95,2.28,2.94,1.79,3.19,0.54,0.94,1.13,1.55,1.67,2.07,3.0,9.0,3.0,null,null]},{"n":109,"name":"ファースト","role":"tnk","extra":false,"v":[1.4,0.9,1.1,2.54,6.86,1.0,50.0,100000.0,[10.0,null],200.0,4.0,0.0,0.0,0.0,8.0,null,1.44,3.1,1.29,3.09,1.44,2.1,2.87,0.77,1.85,2.38,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":110,"name":"レゼ","role":"gun","extra":false,"v":[1.4,0.85,0.95,2.56,14.0,1.0,54.0,4.0,[7.77,null],42.0,9.6,2.5,0.7,1.7,200.0,0.44,1.0,2.47,1.04,2.64,1.77,2.45,3.44,1.03,2.37,3.2,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,3.0,9.0,3.0,null,null]},{"n":111,"name":"シャルル・リヒター","role":"atk","extra":false,"v":[1.25,1.1,0.95,2.63,4.8,1.0,50.0,5.0,[8.0,null],42.0,8.0,1.7,0.7,1.7,8.0,3.0,0.93,2.09,1.43,2.93,2.17,2.84,3.84,1.6,3.1,4.1,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":112,"name":"一姫","role":"spr","extra":false,"v":[1.3,0.75,1.05,2.67,4.4,0.7,24.0,100000.0,[8.9,null],8.0,3.0,1.5,1.1,2.0,null,null,0.97,2.1,1.17,2.94,1.5,2.17,2.77,0.85,2.1,2.77,1.82,3.19,0.55,0.94,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":113,"name":"エドワード・エルリック","role":"tnk","extra":false,"v":[0.85,1.25,1.45,2.61,5.0,1.0,48.0,100000.0,[7.0,null],46.0,10.0,7.0,0.47,1.2,28.0,1.5,1.0,2.6,1.07,2.77,2.44,3.1,4.1,1.44,2.77,3.77,1.79,3.13,0.54,0.94,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":114,"name":"オクトバリ・ニャル・タココ","role":"atk","extra":false,"v":[1.45,0.5,1.05,2.52,6.0,1.0,44.0,100000.0,[6.67,null],32.0,2.0,3.2,0.47,1.2,20.0,1.3,1.37,3.27,1.07,2.84,1.64,2.3,3.37,0.77,1.84,2.34,1.79,3.19,0.55,0.94,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":115,"name":"やぎなまず","role":"spr","extra":true,"v":[0.05,0.05,0.05,5.0,30.0,1.0,10.0,1000.0,[180.0,null],null,null,0.0,0.0,0.0,null,null,0.77,2.0,1.18,3.34,1.76,2.74,3.66,0.98,3.85,4.75,1.59,2.99,0.35,0.75,0.76,1.15,1.02,1.41,1.0,1.0,1.0,null,null]}]};
+const DATA = {"columns":[{"key":"attack","label":"攻撃","group":"基本"},{"key":"defense","label":"防御","group":"基本"},{"key":"physical","label":"体力","group":"基本"},{"key":"speed","label":"移動速度","group":"基本"},{"key":"range","label":"通常射程(m)","group":"通常攻撃"},{"key":"motion","label":"通常倍率","group":"通常攻撃"},{"key":"ulttime","label":"HS時間(秒)","group":"ヒーロースキル"},{"key":"ultdamage","label":"HS倍率","group":"ヒーロースキル"},{"key":"ultinvincible","label":"HS無敵(秒)","group":"ヒーロースキル"},{"key":"ultrange","label":"HS射程","group":"ヒーロースキル"},{"key":"ultsize","label":"HS範囲","group":"ヒーロースキル"},{"key":"hadamage","label":"HA倍率","group":"ヒーローアクション"},{"key":"hastart","label":"HA発生","group":"ヒーローアクション"},{"key":"hastop","label":"HA硬直","group":"ヒーローアクション"},{"key":"harange","label":"HA射程","group":"ヒーローアクション"},{"key":"hasize","label":"HA範囲","group":"ヒーローアクション"},{"key":"sh","label":"近 発生","group":"攻撃カード"},{"key":"ss","label":"近 硬直","group":"攻撃カード"},{"key":"ch","label":"周 発生","group":"攻撃カード"},{"key":"cs","label":"周 硬直","group":"攻撃カード"},{"key":"lh","label":"遠 初弾","group":"攻撃カード"},{"key":"ll","label":"遠 全弾","group":"攻撃カード"},{"key":"ls","label":"遠 硬直","group":"攻撃カード"},{"key":"bh","label":"連 初弾","group":"攻撃カード"},{"key":"bl","label":"連 全弾","group":"攻撃カード"},{"key":"bs","label":"連 硬直","group":"攻撃カード"},{"key":"th","label":"tel 発生","group":"攻撃カード"},{"key":"ts","label":"tel 硬直","group":"攻撃カード"},{"key":"sskill","label":"無 発生","group":"発動カード"},{"key":"sskills","label":"無 硬直","group":"発動カード"},{"key":"mskill","label":"短 発生","group":"発動カード"},{"key":"mskills","label":"短 硬直","group":"発動カード"},{"key":"lskill","label":"長 発生","group":"発動カード"},{"key":"lskills","label":"長 硬直","group":"発動カード"},{"key":"push","label":"プッシュ","group":"ふっとばし"},{"key":"lanch","label":"ランチ","group":"ふっとばし"},{"key":"blast","label":"ブラスト","group":"ふっとばし"},{"key":"abt_mag","label":"アビ倍率","group":"アビリティ"},{"key":"abt_ct","label":"アビCT","group":"アビリティ"}],"roles":{"atk":"アタッカー","gun":"ガンナー","spr":"スプリンター","tnk":"タンク"},"rows":[{"n":1,"name":"十文字アタリ","role":"spr","extra":false,"v":[1.0,1.0,1.0,2.71,4.0,1.0,32.0,2.4,[6.0,null],3.8,null,2.0,1.16,1.33,null,null,0.89,1.96,1.14,3.1,1.61,2.28,3.28,0.75,2.88,3.55,1.8,3.2,0.55,0.95,1.16,1.55,1.68,2.09,2.0,1.0,2.0,null,null]},{"n":2,"name":"ジャスティス ハンコック","role":"tnk","extra":false,"v":[1.5,1.5,0.95,2.21,6.5,1.0,34.0,6.0,[7.34,null],9.0,null,0.0,0.0,0.0,null,null,1.67,4.1,1.1,2.54,1.5,2.18,2.95,0.77,1.77,2.5,1.63,2.69,0.56,0.94,1.17,1.57,1.68,2.09,1.0,9.0,1.0,null,null]},{"n":3,"name":"リリカ","role":"gun","extra":false,"v":[1.2,0.8,0.85,2.52,18.0,1.0,40.0,0.0,[6.0,null],null,null,2.2,0.7,1.7,21.0,1.0,1.67,3.0,1.54,3.67,2.18,2.98,3.68,2.74,4.0,5.34,1.79,3.13,0.44,0.84,0.97,1.37,1.38,1.77,3.0,9.0,3.0,null,null]},{"n":4,"name":"双挽乃保","role":"atk","extra":false,"v":[1.5,1.4,0.9,2.69,4.4,0.7,52.0,0.0,[9.0,null],null,null,10.0,4.06,5.0,4.6,null,1.67,3.44,1.92,4.44,2.28,2.68,3.78,0.84,2.01,2.78,1.26,2.87,0.55,0.96,1.16,1.56,1.68,2.08,4.0,3.0,4.0,null,null]},{"n":5,"name":"桜華忠臣","role":"atk","extra":false,"v":[1.4,0.8,1.15,2.41,4.0,1.0,36.0,100000.0,[7.3,null],76.0,5.0,1.1,1.6,3.2,24.0,1.0,0.86,2.35,1.88,4.77,2.18,2.78,4.45,0.96,2.46,3.78,1.32,3.35,0.57,0.95,1.15,1.55,1.68,2.08,2.0,1.0,2.0,1.33,0.65]},{"n":6,"name":"ジャンヌ ダルク","role":"tnk","extra":false,"v":[1.1,0.8,1.5,2.45,4.0,1.0,74.0,0.0,[7.3,null],null,null,0.0,0.0,0.0,7.0,null,0.89,2.33,1.1,2.94,2.18,2.78,3.44,1.19,2.69,3.95,1.5,3.36,0.55,0.94,1.14,1.56,1.69,2.1,1.0,9.0,1.0,null,null]},{"n":7,"name":"マルコス'55","role":"atk","extra":false,"v":[1.05,1.05,0.8,2.65,4.7,1.0,26.0,0.0,[5.5,"1.3/1.3/5.5"],null,null,1.2,0.53,0.63,44.0,1.5,1.71,2.86,2.0,4.4,2.28,2.95,3.92,1.91,2.5,3.9,1.33,2.95,0.36,0.74,0.75,1.14,1.03,1.43,4.0,3.0,4.0,null,null]},{"n":8,"name":"マルコス'55(1凸)","role":"atk","extra":true,"v":[1.26,1.26,0.8,2.65,4.7,1.0,26.0,0.0,[5.5,"1.3/1.3/5.5"],null,null,1.2,0.53,0.63,44.0,1.5,1.71,2.86,2.0,4.4,2.28,2.95,3.92,1.91,2.5,3.9,1.33,2.95,0.36,0.74,0.75,1.14,1.03,1.43,4.0,3.0,4.0,null,null]},{"n":9,"name":"マルコス'55(2凸)","role":"atk","extra":true,"v":[1.51,1.51,0.8,2.65,4.7,1.0,26.0,0.0,[5.5,"1.3/1.3/5.5"],null,null,1.2,0.53,0.63,44.0,1.5,1.71,2.86,2.0,4.4,2.28,2.95,3.92,1.91,2.5,3.9,1.33,2.95,0.36,0.74,0.75,1.14,1.03,1.43,4.0,3.0,4.0,null,null]},{"n":10,"name":"マルコス'55(3凸)","role":"atk","extra":true,"v":[1.81,1.81,0.8,2.65,4.7,1.0,26.0,0.0,[5.5,"1.3/1.3/5.5"],null,null,1.2,0.53,0.63,44.0,1.5,1.71,2.86,2.0,4.4,2.28,2.95,3.92,1.91,2.5,3.9,1.33,2.95,0.36,0.74,0.75,1.14,1.03,1.43,4.0,3.0,4.0,null,null]},{"n":11,"name":"ルチアーノ","role":"gun","extra":false,"v":[1.3,0.8,0.9,2.19,13.0,0.78,76.0,100000.0,[0.91,null],null,null,2.0,0.43,1.0,16.0,1.0,1.32,2.1,1.37,2.94,1.37,2.04,2.97,0.99,3.78,4.78,1.26,3.27,0.54,0.96,1.16,1.54,1.68,2.07,3.0,9.0,2.0,1.33,0.65]},{"n":12,"name":"Voidoll","role":"spr","extra":false,"v":[0.9,1.45,1.1,2.71,4.0,1.0,28.0,0.0,[3.8,null],null,null,2.0,1.16,1.54,null,null,0.77,1.9,1.1,3.15,1.75,2.41,3.24,0.98,3.09,3.92,1.76,2.99,0.35,0.75,0.76,1.15,1.02,1.41,3.0,2.0,4.0,null,null]},{"n":13,"name":"深川まとい","role":"gun","extra":false,"v":[1.4,0.8,1.0,2.25,15.0,1.0,34.0,0.8,[7.5,null],32.0,null,1.43,0.7,2.5,56.0,4.5,1.04,2.27,1.27,3.1,2.11,2.78,3.31,1.0,2.54,3.27,1.25,2.87,0.55,0.98,1.14,1.54,1.67,2.07,3.0,9.0,2.0,1.4,1.0]},{"n":14,"name":"ソル=バッドガイ","role":"atk","extra":false,"v":[1.45,0.8,1.1,2.52,4.5,1.0,30.0,0.0,[5.3,null],null,null,1.21,1.06,2.5,14.6,1.0,1.15,2.61,1.6,3.1,1.3,1.97,2.77,0.78,1.86,2.27,1.58,3.03,0.56,0.96,1.17,1.54,1.68,2.08,2.0,1.0,2.0,null,null]},{"n":15,"name":"ディズィー","role":"gun","extra":false,"v":[1.3,0.95,0.65,2.72,15.0,1.0,88.0,0.0,[8.0,null],null,null,0.0,0.0,0.0,null,null,1.05,2.04,1.05,2.64,1.87,2.54,3.44,0.95,1.88,2.78,1.46,3.19,0.58,0.95,1.15,1.55,1.69,2.09,3.0,9.0,2.0,null,null]},{"n":16,"name":"グスタフ ハイドリヒ","role":"tnk","extra":false,"v":[1.35,1.5,1.5,2.59,4.6,0.63,50.0,90.0,[6.2,null],null,null,12.0,0.0,0.0,4.4,null,1.6,3.44,0.84,2.44,2.11,2.78,3.78,1.78,3.28,3.77,1.85,3.35,0.55,0.95,1.16,1.57,1.72,2.1,1.0,9.0,1.0,null,null]},{"n":17,"name":"ニコラ テスラ","role":"spr","extra":false,"v":[1.3,0.5,1.4,2.78,4.0,1.0,16.0,1.8,[5.5,"1.5/5.5"],240.0,0.5,2.0,1.13,1.53,null,null,1.37,3.44,1.6,3.77,1.56,2.22,3.28,1.45,2.77,3.44,1.81,3.2,0.55,0.96,1.16,1.56,1.68,2.09,4.0,3.0,4.0,1.0,0.85]},{"n":18,"name":"初音 ミク","role":"spr","extra":false,"v":[1.05,0.7,1.05,2.7,7.0,1.0,48.0,0.0,[7.3,null],6.0,null,2.0,1.27,1.67,null,null,1.3,2.44,1.11,2.64,2.1,2.77,3.77,1.11,2.94,3.78,1.8,3.16,0.56,0.95,1.16,1.54,1.69,2.09,4.0,3.0,4.0,null,null]},{"n":19,"name":"ヴィオレッタ ノワール","role":"tnk","extra":false,"v":[0.95,1.3,1.4,2.6,4.0,1.0,50.0,0.0,[7.3,null],6.0,null,0.0,0.0,0.0,7.6,null,1.6,2.94,1.46,3.44,1.44,2.1,2.9,1.44,2.94,3.44,1.54,3.15,0.55,0.98,1.17,1.57,1.7,2.1,1.0,9.0,1.0,null,null]},{"n":20,"name":"コクリコット ブランシュ","role":"spr","extra":false,"v":[1.45,1.5,0.5,2.78,4.4,1.0,32.0,0.0,[6.7,null],7.0,null,2.0,1.0,1.37,null,null,0.94,1.94,0.97,2.5,2.12,2.79,3.77,1.44,3.54,4.11,1.81,3.2,0.56,0.95,1.14,1.54,1.67,2.07,2.0,2.0,3.0,null,null]},{"n":21,"name":"リュウ","role":"atk","extra":false,"v":[1.35,0.9,1.25,2.48,4.0,1.0,16.0,100.0,[3.5,null],44.0,2.5,0.0,0.0,0.0,null,null,0.94,2.17,1.16,2.95,1.4,2.07,3.11,0.88,1.9,2.84,1.71,3.2,0.55,0.95,1.16,1.55,1.56,1.95,2.0,1.0,2.0,1.11,1.0]},{"n":22,"name":"春麗","role":"spr","extra":false,"v":[1.25,0.95,1.0,2.72,4.2,1.0,32.0,100000.0,[4.3,null],6.0,6.0,2.0,1.17,1.57,null,null,1.34,2.77,1.04,2.9,2.28,2.95,4.12,0.79,1.86,2.52,1.43,3.2,0.56,0.95,1.14,1.55,1.69,2.08,4.0,3.0,4.0,1.25,0.75]},{"n":23,"name":"マリア=S=レオンブルク","role":"atk","extra":false,"v":[1.2,1.45,0.95,2.29,8.6,0.66,52.0,6.0,[8.9,null],4.0,null,1.2,1.53,2.0,32.0,0.44,1.27,2.44,1.32,3.24,2.11,2.78,3.77,0.95,2.45,3.44,1.72,3.21,0.55,0.93,1.14,1.54,1.66,2.06,4.0,3.0,4.0,null,null]},{"n":24,"name":"アダム=ユーリエフ","role":"atk","extra":false,"v":[1.35,0.95,1.05,2.67,4.7,1.0,32.0,0.0,[4.5,null],76.0,3.0,1.9,1.1,2.5,28.0,2.3,0.9,2.1,1.46,3.0,2.13,2.79,3.79,1.62,3.11,4.11,1.8,3.2,0.56,0.95,1.18,1.57,1.72,2.11,4.0,3.0,4.0,1.4,1.0]},{"n":25,"name":"サーティーン(gun)","role":"gun","extra":false,"v":[1.3,0.75,1.0,2.47,14.0,1.0,14.0,0.0,[5.5,null],null,null,1.45,0.43,2.0,17.0,1.0,1.04,2.04,1.07,2.7,1.95,2.61,3.61,1.11,2.6,3.77,1.79,3.14,0.56,0.95,1.15,1.55,1.68,2.08,3.0,9.0,2.0,null,null]},{"n":26,"name":"サーティーン(atk)","role":"atk","extra":true,"v":[1.4,1.4,1.0,2.65,5.5,1.0,14.0,0.0,[5.5,null],null,null,2.6,0.4,2.5,15.0,4.0,1.04,2.04,1.07,2.7,1.95,2.61,3.61,1.11,2.6,3.77,1.79,3.14,0.56,0.95,1.15,1.55,1.68,2.08,2.0,1.0,2.0,null,null]},{"n":27,"name":"かけだし勇者","role":"spr","extra":false,"v":[1.0,1.0,1.0,2.78,4.2,1.0,30.0,0.0,[3.3,null],null,null,0.01,2.0,2.5,null,null,1.06,2.17,1.44,3.24,1.94,2.77,3.77,1.46,3.11,4.11,1.81,3.14,0.55,0.95,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":28,"name":"エミリア","role":"gun","extra":false,"v":[1.4,1.45,0.9,2.59,14.0,0.54,32.0,0.68,[7.2,null],32.0,null,0.0,0.0,0.0,20.0,5.0,0.97,2.09,1.46,3.6,1.4,2.07,3.06,1.63,3.45,4.11,1.8,3.19,0.57,0.95,1.17,1.57,1.69,2.1,3.0,9.0,3.0,null,null]},{"n":29,"name":"レム","role":"atk","extra":false,"v":[1.4,0.9,1.1,2.54,8.0,1.0,54.0,0.0,[5.8,null],null,null,2.0,1.74,2.5,28.0,4.0,1.11,2.45,0.96,2.6,2.11,2.78,4.12,1.28,3.1,3.44,1.75,3.19,0.56,0.95,1.15,1.55,1.68,2.08,4.0,3.0,4.0,null,null]},{"n":30,"name":"カイ=キスク","role":"atk","extra":false,"v":[1.45,0.95,0.95,2.5,4.5,1.0,30.0,4.0,[4.35,null],40.0,3.0,3.5,2.35,3.5,22.6,1.0,0.94,2.21,1.04,2.64,1.34,2.0,3.0,0.84,1.84,2.51,1.8,3.19,0.58,0.96,1.13,1.55,1.68,2.07,2.0,1.0,2.0,null,null]},{"n":31,"name":"メグメグ","role":"gun","extra":false,"v":[1.4,0.75,0.9,2.65,16.0,0.36,14.0,0.88,[7.0,"7/2.9"],null,null,0.715,0.2,0.4,200.0,1.0,0.97,2.14,1.78,4.41,1.33,2.0,2.84,1.1,2.94,3.4,1.8,3.19,0.56,0.95,1.14,1.54,1.67,2.08,3.0,9.0,3.0,null,null]},{"n":32,"name":"鏡音 リン","role":"gun","extra":false,"v":[1.4,0.95,0.95,2.58,16.0,1.0,38.0,0.0,[7.7,null],14.0,null,0.0,0.0,0.0,32.0,10.0,1.04,2.37,1.44,3.6,1.47,2.14,2.84,0.94,2.27,3.1,1.79,3.15,0.56,0.96,1.14,1.53,1.69,2.08,3.0,9.0,3.0,null,null]},{"n":33,"name":"鏡音 レン","role":"tnk","extra":false,"v":[0.95,1.35,1.35,2.61,7.0,1.0,48.0,2.5,[7.1,null],null,null,0.0,0.0,0.0,null,null,1.45,3.1,1.12,2.76,1.95,2.61,3.6,1.29,2.95,3.78,1.8,3.2,0.56,0.96,1.15,1.54,1.66,2.07,1.0,9.0,1.0,null,null]},{"n":34,"name":"イスタカ","role":"gun","extra":false,"v":[1.2,0.6,1.25,2.36,13.0,1.0,34.0,2.2,[4.0,null],8.0,null,0.767,0.6,0.9,null,null,0.97,2.1,1.6,3.77,1.79,2.45,3.45,1.78,3.11,3.78,1.8,3.19,0.54,0.95,1.14,1.56,1.69,2.08,3.0,9.0,2.0,null,null]},{"n":35,"name":"ザック&レイチェル","role":"spr","extra":false,"v":[1.25,0.95,0.9,2.67,5.0,1.0,34.0,99999.0,[5.3,null],null,null,2.0,1.26,1.66,null,null,0.94,2.04,1.6,3.77,1.94,2.6,3.6,1.61,3.27,4.1,1.73,3.19,0.54,0.94,1.15,1.54,1.68,2.08,3.0,2.0,3.0,null,null]},{"n":36,"name":"輝龍院きらら","role":"spr","extra":false,"v":[0.95,0.8,0.85,2.71,4.4,1.0,26.0,4.0,[9.0,null],null,null,2.0,1.16,1.56,null,null,0.97,1.94,1.77,3.77,1.6,2.27,3.44,0.77,2.54,2.6,1.83,3.19,0.57,0.98,1.15,1.56,1.69,2.09,4.0,2.0,3.0,null,null]},{"n":37,"name":"モノクマ","role":"tnk","extra":false,"v":[1.3,1.45,0.95,2.67,4.3,1.0,34.0,99999.0,[9.2,"9.2/7"],40.0,9.6,0.0,0.0,0.0,7.0,null,1.07,2.5,1.28,3.61,1.78,2.45,3.44,1.27,2.77,3.77,1.81,3.21,0.54,0.94,1.17,1.55,1.68,2.09,1.0,9.0,1.0,null,null]},{"n":38,"name":"ポロロッチョ","role":"atk","extra":false,"v":[1.45,0.65,0.9,2.56,4.3,1.0,56.0,2.4,[7.8,null],12.0,null,1.7,0.61,1.0,null,null,1.06,2.45,1.44,3.44,1.51,2.18,2.78,0.96,2.45,3.27,1.79,3.19,0.56,0.96,1.15,1.55,1.68,2.08,2.0,1.0,2.0,null,null]},{"n":39,"name":"アクア","role":"spr","extra":false,"v":[1.1,1.1,1.1,2.7,4.0,1.0,32.0,0.5,[6.0,null],null,null,3.5,1.3,1.7,null,null,1.07,2.24,1.61,3.28,1.37,2.04,3.0,1.45,2.79,4.11,1.8,3.2,0.56,0.95,1.17,1.57,1.71,2.11,4.0,3.0,4.0,null,null]},{"n":40,"name":"めぐみん","role":"tnk","extra":false,"v":[0.95,1.35,1.5,2.64,4.0,1.0,106.0,999.0,[9.5,null],10.0,null,0.0,0.0,0.0,null,null,0.94,2.04,1.1,2.67,2.11,2.77,4.11,1.29,3.3,3.96,1.8,3.2,0.57,0.96,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":41,"name":"ソーン=ユーリエフ","role":"gun","extra":false,"v":[1.2,1.45,0.7,2.51,18.0,1.0,50.0,0.0,[7.9,null],5.0,null,3.3,0.7,1.9,16.0,2.3,1.5,2.94,0.88,2.25,1.84,2.51,3.61,1.38,3.45,4.12,1.81,3.2,0.54,0.95,1.24,1.64,1.77,2.17,3.0,9.0,3.0,null,null]},{"n":42,"name":"リヴァイ","role":"atk","extra":false,"v":[1.35,1.3,0.95,2.68,4.5,1.0,28.0,100000.0,[7.6,"4.7/7.6"],66.0,2.4,1.8,1.7,2.6,23.0,3.0,1.38,2.84,1.6,3.27,2.01,2.68,3.94,0.78,2.1,2.6,1.79,3.2,0.56,0.96,1.13,1.53,1.67,2.06,4.0,3.0,4.0,null,null]},{"n":43,"name":"デビルミント鬼龍 デルミン","role":"atk","extra":false,"v":[1.4,1.25,0.9,2.56,4.5,1.0,38.0,2.7,[7.1,null],50.0,8.0,0.0,0.0,0.0,null,null,0.94,2.34,1.79,3.63,1.87,2.54,3.64,1.19,2.86,3.61,1.8,3.2,0.56,0.96,1.14,1.54,1.67,2.07,2.0,1.0,2.0,null,null]},{"n":44,"name":"トマス","role":"tnk","extra":false,"v":[1.4,0.65,1.4,2.16,4.3,1.0,68.0,1.2,[6.7,null],7.0,null,0.0,0.0,0.0,null,null,0.97,2.26,1.31,3.18,2.18,2.85,3.95,0.77,1.84,2.65,1.54,3.03,0.55,0.95,1.17,1.57,1.71,2.11,1.0,9.0,1.0,null,null]},{"n":45,"name":"猫宮ひなた(AR)","role":"gun","extra":false,"v":[1.5,1.4,0.75,2.67,18.0,0.41,36.0,1000000.0,[7.0,null],null,null,2.2,1.01,2.0,40.0,3.0,0.94,2.14,1.84,4.28,1.64,2.31,3.52,1.31,2.71,3.61,1.79,3.19,0.56,0.95,1.17,1.57,1.7,2.11,3.0,9.0,2.0,null,null]},{"n":46,"name":"猫宮ひなた(SG)","role":"gun","extra":true,"v":[1.5,1.4,0.75,2.75,8.0,1.0,36.0,1000000.0,[7.0,null],null,null,2.2,1.01,2.0,40.0,3.0,0.94,2.14,1.84,4.28,1.64,2.31,3.52,1.31,2.71,3.61,1.79,3.19,0.56,0.95,1.17,1.57,1.7,2.11,3.0,9.0,2.0,null,null]},{"n":47,"name":"岡部 倫太郎","role":"gun","extra":false,"v":[1.3,0.6,0.95,2.53,14.0,1.0,46.0,0.0,[11.0,null],null,null,0.8,1.4,2.6,null,null,0.94,2.27,1.62,3.77,1.67,2.34,3.44,0.8,1.9,2.84,1.81,3.21,0.56,0.95,1.13,1.53,1.66,2.07,3.0,9.0,2.0,null,null]},{"n":48,"name":"零夜","role":"spr","extra":false,"v":[1.45,1.4,0.9,2.77,7.5,1.0,30.0,1.3,[5.0,null],5.0,null,2.0,1.16,1.36,null,null,1.64,2.84,1.5,3.6,1.5,2.17,2.57,0.9,2.37,2.97,1.81,3.2,0.55,0.94,1.15,1.54,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":49,"name":"セイバーオルタ","role":"atk","extra":false,"v":[1.5,1.35,0.95,2.68,4.5,1.0,72.0,99999.0,[8.2,null],100.0,3.0,2.0,0.7,1.3,12.0,1.0,0.94,2.18,1.04,2.7,2.19,2.85,3.84,1.24,2.94,3.64,1.8,3.2,0.58,0.96,1.14,1.54,1.68,2.08,2.0,1.0,2.0,null,null]},{"n":50,"name":"ギルガメッシュ","role":"gun","extra":false,"v":[1.5,0.9,1.2,2.13,18.0,0.45,52.0,99999.0,[10.0,null],8.0,null,0.0,0.0,0.0,18.0,3.5,1.64,3.1,1.95,3.81,1.52,2.18,3.18,0.77,1.84,2.57,1.79,3.19,0.56,0.97,1.14,1.54,1.67,2.07,3.0,9.0,2.0,null,null]},{"n":51,"name":"ルルカ","role":"atk","extra":false,"v":[1.35,0.95,1.05,2.54,4.5,1.0,26.0,2.0,[6.0,null],16.0,4.0,3.0,0.77,1.3,9.2,4.0,0.93,2.24,1.54,2.96,1.59,2.25,3.17,0.77,1.9,2.47,1.8,3.19,0.55,0.94,1.14,1.55,1.66,2.06,4.0,3.0,4.0,null,null]},{"n":52,"name":"ピエール77世","role":"spr","extra":false,"v":[0.5,0.5,1.5,2.76,4.0,1.0,34.0,0.0,[6.88,null],null,null,1.0,1.46,1.94,null,null,0.99,2.51,1.08,2.91,1.88,2.55,3.45,0.8,3.28,4.11,1.79,3.19,0.57,0.97,1.14,1.54,1.67,2.07,2.0,2.0,3.0,null,null]},{"n":53,"name":"ピエール77世(HS)","role":"spr","extra":true,"v":[2.0,1.5,1.5,3.86,8.0,1.0,34.0,0.0,[6.88,null],null,null,1.0,1.46,1.94,null,null,0.99,2.51,1.08,2.91,1.88,2.55,3.45,0.8,3.28,4.11,1.79,3.19,0.57,0.97,1.14,1.54,1.67,2.07,2.0,2.0,3.0,null,null]},{"n":54,"name":"佐藤四郎兵衛忠信","role":"tnk","extra":false,"v":[1.45,0.95,1.3,2.56,4.3,1.0,44.0,0.0,[8.4,null],10.0,null,1.0,0.53,0.8,10.0,2.5,1.15,2.57,1.38,3.27,2.18,2.85,3.61,0.84,2.14,2.94,1.54,3.04,0.56,0.97,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":56,"name":"アイズ・ヴァレンシュタイン","role":"atk","extra":false,"v":[1.45,1.4,0.7,2.59,4.7,1.0,22.0,1.4,[3.98,null],40.0,2.5,2.6,0.8,2.0,20.0,2.0,1.24,2.1,0.99,2.29,2.13,2.78,3.11,0.77,1.9,2.3,1.81,3.21,0.55,0.95,1.16,1.56,1.7,2.09,2.0,1.0,2.0,null,null]},{"n":57,"name":"狐ヶ咲 甘色","role":"atk","extra":false,"v":[1.3,0.75,0.9,2.64,4.15,1.0,38.0,0.0,[6.0,null],20.0,14.0,2.7,0.8,2.0,8.6,5.0,0.94,2.1,1.5,3.6,1.48,2.14,3.1,1.28,2.94,3.77,1.79,3.19,0.55,0.95,1.16,1.55,1.7,2.09,4.0,3.0,4.0,null,null]},{"n":58,"name":"ノクティス","role":"atk","extra":false,"v":[1.4,1.2,0.95,2.61,5.0,1.0,38.0,99999.0,[7.2,null],16.0,8.0,1.5,0.7,2.0,34.0,3.5,0.94,2.0,1.74,3.64,1.4,2.07,2.9,1.22,2.96,3.27,1.27,2.86,0.56,0.95,1.17,1.57,1.7,2.09,3.0,2.0,3.0,null,null]},{"n":59,"name":"ニーズヘッグ","role":"gun","extra":false,"v":[1.45,1.35,0.95,2.7,15.0,0.42,54.0,4.0,[11.0,null],7.0,null,0.68,1.4,1.67,200.0,1.0,0.94,2.34,1.94,4.11,1.4,2.07,2.87,0.86,1.91,2.95,1.8,3.2,0.56,0.95,1.16,1.56,1.7,2.09,3.0,9.0,2.0,null,null]},{"n":60,"name":"中島 敦","role":"spr","extra":false,"v":[1.3,0.85,1.15,2.76,4.7,1.0,28.0,0.0,[5.17,null],null,null,2.0,1.26,1.74,null,null,0.94,2.1,1.59,3.65,2.22,2.88,3.89,0.84,2.1,2.77,1.8,3.2,0.56,0.95,1.17,1.57,1.7,2.1,4.0,1.0,3.0,null,null]},{"n":61,"name":"芥川 龍之介","role":"gun","extra":false,"v":[1.45,1.35,0.8,2.41,15.0,1.0,32.0,100000.0,[5.73,null],24.0,4.0,0.44,0.9,1.7,29.0,1.0,1.58,3.04,0.97,2.44,1.44,2.1,3.1,1.31,2.98,3.61,1.8,3.2,0.57,0.97,1.15,1.54,1.69,2.08,3.0,9.0,2.0,null,null]},{"n":62,"name":"ゲームバズーカガール","role":"gun","extra":false,"v":[1.35,0.8,1.0,2.63,16.0,1.0,34.0,4.0,[8.72,null],200.0,4.0,1.85,0.45,1.4,22.0,2.5,0.99,2.47,1.09,2.96,1.35,2.0,2.94,1.6,2.94,3.6,1.79,3.2,0.55,0.96,1.16,1.56,1.69,2.06,0.0,9.0,2.0,null,null]},{"n":63,"name":"ライザリン・シュタウト","role":"tnk","extra":false,"v":[1.4,0.95,1.4,2.54,4.3,1.0,34.0,99999.0,[8.07,null],40.0,4.0,1.0,1.8,2.3,8.0,4.0,1.14,2.44,1.17,2.97,1.57,2.28,3.1,1.27,3.27,3.77,1.8,3.15,0.56,0.96,1.15,1.55,1.7,2.1,1.0,9.0,1.0,null,null]},{"n":64,"name":"青春 アリス","role":"tnk","extra":false,"v":[0.75,0.6,1.45,2.65,4.0,1.0,52.0,0.0,[6.25,null],null,null,1.0,0.55,0.92,null,null,0.94,2.11,1.57,3.27,1.6,2.28,3.17,1.5,2.84,3.94,1.8,3.19,0.56,0.96,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":65,"name":"ジョーカー","role":"spr","extra":false,"v":[1.35,1.25,0.9,2.69,4.7,1.0,20.0,0.0,[7.34,null],null,null,1.0,1.16,1.36,null,null,0.94,2.29,1.0,2.7,1.67,2.34,3.1,1.61,2.22,3.12,1.27,2.87,0.56,0.96,1.15,1.54,1.69,2.08,3.0,3.0,2.0,null,null]},{"n":66,"name":"イグニス=ウィル=ウィスプ","role":"atk","extra":false,"v":[1.25,0.9,1.25,2.69,4.8,1.0,34.0,100000.0,[6.72,null],5.0,null,2.4,2.0,4.0,38.0,0.65,0.97,2.4,1.0,2.64,2.14,2.8,4.04,1.51,2.84,3.94,1.75,3.13,0.55,0.96,1.14,1.54,1.67,2.07,2.0,1.0,2.0,null,null]},{"n":67,"name":"アインズ・ウール・ゴウン","role":"gun","extra":false,"v":[1.4,1.4,0.9,2.14,14.0,0.29,32.0,100000.0,[7.05,null],10.0,null,0.0,0.0,0.0,26.0,1.0,0.97,2.37,1.69,3.61,1.44,2.1,2.84,1.47,3.04,3.77,1.79,3.14,0.55,0.95,0.55,0.95,0.55,0.95,3.0,9.0,3.0,null,null]},{"n":68,"name":"糸廻 輪廻","role":"gun","extra":false,"v":[1.4,0.7,1.0,2.58,15.0,0.48,32.0,6.0,[8.55,null],9.0,null,0.48,2.15,4.52,20.0,2.5,1.51,2.81,1.72,3.74,1.55,2.23,3.25,0.96,2.28,3.28,1.8,3.1,0.55,0.96,1.14,1.54,1.67,2.07,2.0,9.0,2.0,1.33,0.9]},{"n":69,"name":"キリト","role":"atk","extra":false,"v":[1.45,0.85,1.05,2.61,4.3,1.0,42.0,4.0,[6.0,null],26.0,10.0,1.45,0.7,1.3,12.0,1.0,1.08,2.52,1.04,2.27,2.1,2.77,3.77,0.79,1.84,2.51,1.8,3.21,0.56,0.97,1.14,1.54,1.68,2.08,4.0,3.0,4.0,null,null]},{"n":70,"name":"アスナ","role":"spr","extra":false,"v":[1.35,1.35,0.95,2.71,4.3,1.0,30.0,99999.0,[4.35,null],36.0,2.5,0.82,1.16,1.33,null,null,1.26,2.46,1.62,3.62,1.44,2.1,3.11,0.78,1.84,2.44,1.8,3.2,0.56,0.96,1.14,1.54,1.67,2.08,4.0,3.0,3.0,null,null]},{"n":71,"name":"Bugdoll","role":"gun","extra":false,"v":[1.35,1.45,0.8,2.52,15.0,1.0,44.0,1.5,[10.05,null],200.0,10.8,0.57,1.3,1.5,29.0,8.0,1.31,2.64,1.77,3.44,1.4,2.07,3.04,0.78,1.91,3.17,1.66,2.99,0.36,0.77,0.74,1.14,1.01,1.4,3.0,9.0,2.0,null,null]},{"n":72,"name":"ステリア・ララ・シルワ","role":"atk","extra":false,"v":[1.4,1.45,0.95,2.08,6.5,1.0,44.0,4.5,[4.8,null],5.0,null,0.97,1.7,3.2,40.0,1.0,1.17,2.54,1.57,3.67,1.5,2.17,3.0,0.77,1.77,2.37,1.8,3.14,0.54,0.96,1.14,1.54,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":73,"name":"ラム","role":"spr","extra":false,"v":[1.4,0.75,1.35,2.69,8.0,1.0,36.0,0.0,[7.07,null],null,null,2.0,1.16,1.33,null,null,0.94,2.34,1.04,2.67,1.44,2.1,2.87,1.61,2.95,3.6,1.81,3.21,0.56,0.97,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":74,"name":"2B","role":"atk","extra":false,"v":[1.35,1.25,0.85,2.54,4.0,1.0,40.0,1.0,[6.3,null],20.0,1.0,2.2,2.3,3.4,20.0,2.0,0.94,2.27,1.77,3.1,1.62,2.28,3.11,0.89,1.96,2.79,1.8,3.21,0.57,0.96,1.17,1.57,1.7,2.1,4.0,3.0,3.0,null,null]},{"n":75,"name":"ラヴィ・シュシュマルシュ","role":"tnk","extra":false,"v":[1.45,0.5,1.45,2.56,4.0,1.0,36.0,20.0,[6.6,null],10.0,null,0.2,0.0,0.0,8.0,null,0.97,2.46,1.1,2.9,1.5,2.17,3.04,1.65,3.31,3.98,1.79,3.14,0.56,0.96,1.17,1.57,1.7,2.1,1.0,9.0,1.0,null,null]},{"n":76,"name":"リムル=テンペスト","role":"atk","extra":false,"v":[1.45,0.85,1.05,2.6,4.3,1.0,38.0,100000.0,[5.8,null],10.0,5.11,1.3,2.3,3.6,16.0,2.3,0.94,2.01,1.07,2.54,1.94,2.61,3.45,1.45,2.78,3.28,1.81,3.21,0.56,0.95,1.16,1.57,1.7,2.1,4.0,3.0,4.0,null,null]},{"n":77,"name":"アル・ダハブ＝アルカティア","role":"spr","extra":false,"v":[1.1,0.0,1.2,2.69,5.0,1.0,36.0,200.0,[4.34,null],26.0,8.0,1.0,1.16,1.2,null,null,0.96,2.26,1.45,3.24,1.44,2.1,2.77,1.11,2.94,3.78,1.81,3.21,0.56,0.95,1.18,1.58,1.7,2.1,3.0,2.0,3.0,null,null]},{"n":78,"name":"御坂美琴","role":"atk","extra":false,"v":[1.3,0.75,1.05,2.64,7.0,0.53,42.0,100000.0,[6.35,null],50.0,3.0,2.5,0.6,1.6,8.0,null,0.98,2.6,1.07,2.87,1.38,2.04,2.64,1.5,3.37,3.94,1.45,2.92,0.56,0.95,1.16,1.55,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":79,"name":"アクセラレータ","role":"gun","extra":false,"v":[1.5,1.5,0.45,2.43,13.0,1.0,60.0,10.0,[6.0,null],10.0,4.0,1.0,1.1,1.4,16.0,2.3,0.94,2.1,1.03,2.33,2.27,2.94,4.1,0.8,1.93,2.67,1.8,3.19,0.56,0.95,1.17,1.57,1.7,2.1,3.0,9.0,3.0,null,null]},{"n":80,"name":"ぶれいずどらごん","role":"gun","extra":false,"v":[1.15,0.8,1.2,2.56,18.0,1.0,48.0,100000.0,[10.0,null],86.0,4.0,2.0,1.9,3.5,null,null,1.01,2.18,1.94,4.1,1.44,2.1,3.1,1.32,2.98,3.65,1.8,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,9.0,2.0,null,null]},{"n":81,"name":"ベル・クラネル","role":"spr","extra":false,"v":[1.45,0.9,0.95,2.72,4.0,0.77,28.0,4.5,[4.8,null],28.0,3.0,1.8,1.16,3.4,null,null,0.98,2.1,1.45,2.71,1.3,1.97,2.64,1.44,2.5,3.04,1.8,3.19,0.56,0.94,1.17,1.57,1.67,2.07,2.0,2.0,3.0,null,null]},{"n":82,"name":"ロキシー・ミグルディア","role":"gun","extra":false,"v":[1.35,1.35,0.95,2.43,15.0,1.0,66.0,0.0,[8.0,null],null,null,3.0,0.6,1.66,40.0,4.0,1.28,2.78,1.07,2.6,1.4,2.07,2.77,1.44,2.77,3.44,1.79,3.19,0.56,0.94,1.17,1.57,1.7,2.1,3.0,9.0,3.0,null,null]},{"n":83,"name":"某＜なにがし＞","role":"spr","extra":false,"v":[1.4,0.55,1.0,2.69,4.5,1.0,40.0,1.5,[4.0,null],50.0,1.5,2.0,1.16,1.33,null,null,1.1,2.6,1.04,2.6,1.77,2.44,3.44,0.87,1.94,2.77,1.79,3.19,0.54,0.94,1.2,1.6,1.74,2.14,3.0,2.0,3.0,null,0.65]},{"n":84,"name":"ロックマン.EXE&光熱斗","role":"gun","extra":false,"v":[1.4,1.1,0.9,2.59,15.0,1.0,28.0,100000.0,[4.56,null],30.0,2.0,1.1,0.6,1.0,26.0,1.5,0.96,2.11,1.04,2.64,1.37,2.04,3.0,0.87,2.04,2.77,1.27,2.86,0.54,0.94,1.17,1.57,1.71,2.11,3.0,9.0,4.0,null,null]},{"n":85,"name":"クー・シー","role":"atk","extra":false,"v":[1.05,1.5,0.55,2.78,5.5,1.0,26.0,0.0,[4.66,null],null,null,1.0,0.0,0.0,24.0,10.0,0.88,2.15,1.74,4.07,2.24,2.9,3.91,0.98,2.64,4.4,1.59,2.99,0.37,0.76,0.74,1.14,1.01,1.4,3.0,2.0,3.0,null,null]},{"n":86,"name":"デンジ","role":"atk","extra":false,"v":[1.5,0.6,1.0,2.62,4.4,0.65,36.0,100000.0,[8.16,null],null,null,2.5,0.55,2.0,22.0,6.0,0.98,2.17,1.6,3.27,2.17,2.84,3.94,0.77,1.9,2.27,1.79,3.19,0.56,0.94,1.17,1.57,1.7,2.1,3.0,2.0,4.0,null,null]},{"n":87,"name":"パワー","role":"spr","extra":false,"v":[1.25,0.85,1.0,2.66,4.0,1.0,48.0,5.0,[7.9,null],20.0,10.0,2.5,1.16,1.33,10.0,4.0,0.94,2.27,1.14,2.84,2.17,2.84,3.85,1.62,3.11,4.11,1.83,3.2,0.56,0.94,1.16,1.56,1.67,2.07,3.0,2.0,4.0,null,null]},{"n":88,"name":"アミスター=バランディン","role":"tnk","extra":false,"v":[1.45,1.35,0.95,2.28,6.4,1.0,56.0,0.0,[5.84,null],null,null,0.0,0.55,0.92,null,null,0.92,2.45,1.57,3.5,1.45,2.1,3.01,0.8,1.93,2.56,1.8,3.19,0.56,0.96,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":89,"name":"アミスター=バランディン(HS)","role":"tnk","extra":true,"v":[4.35,5.4,0.95,3.65,6.4,1.0,56.0,0.0,[5.84,null],null,null,2.0,1.16,1.33,null,null,0.92,2.45,1.57,3.5,1.45,2.1,3.01,0.8,1.93,2.56,1.8,3.19,0.56,0.96,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":90,"name":"シノン","role":"gun","extra":false,"v":[0.95,0.9,0.95,2.54,18.0,1.0,44.0,100000.0,[6.0,null],200.0,1.0,1.5,0.7,1.7,40.0,0.33,1.44,2.94,1.7,3.77,1.3,1.97,2.64,1.64,2.98,3.51,1.79,3.19,0.56,0.94,1.14,1.54,1.67,2.07,3.0,9.0,4.0,null,null]},{"n":91,"name":"ターニャ・デグレチャフ","role":"atk","extra":false,"v":[1.4,0.5,0.9,2.69,9.0,0.46,58.0,100000.0,[8.0,null],19.0,null,1.6,0.77,1.7,17.0,3.0,0.97,2.2,1.04,2.47,1.8,2.47,3.37,0.84,2.04,2.57,1.79,3.19,0.54,0.94,1.1,1.5,1.65,2.05,3.0,2.0,3.0,null,null]},{"n":92,"name":"鬼ヶ式 うら","role":"tnk","extra":false,"v":[1.4,0.7,1.4,2.59,5.5,0.46,50.0,100000.0,[8.0,null],34.0,null,1.0,0.55,0.92,13.0,null,1.32,2.99,0.94,2.45,2.27,2.94,4.1,1.37,2.37,4.77,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":93,"name":"コラプス","role":"atk","extra":false,"v":[1.3,1.4,0.85,2.48,4.3,1.0,42.0,2.0,[6.66,null],38.0,9.0,0.5,0.43,1.7,40.0,1.0,0.9,2.0,1.87,4.44,2.17,3.0,4.44,2.44,3.77,5.44,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,3.0,2.0,null,null]},{"n":94,"name":"ボンドルド","role":"atk","extra":false,"v":[1.45,0.95,1.3,2.07,7.0,1.0,26.0,100000.0,[4.0,null],10.0,2.0,1.0,1.06,2.0,10.0,3.0,1.18,2.58,1.57,3.67,1.4,2.07,2.84,0.87,1.9,2.88,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,3.0,2.0,null,null]},{"n":95,"name":"みりぽゆ","role":"gun","extra":false,"v":[1.4,0.7,1.0,2.58,12.0,0.37,30.0,0.27,[6.0,"6/2"],null,null,0.54,1.0,2.0,17.0,2.5,0.95,2.38,1.3,3.3,1.44,2.1,2.94,1.37,2.37,3.77,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,3.0,9.0,4.0,null,null]},{"n":96,"name":"ゴン=フリークス","role":"atk","extra":false,"v":[1.5,0.9,1.2,2.59,4.3,1.0,56.0,0.0,[9.0,null],null,null,1.2,0.3,1.2,14.0,1.5,0.94,2.1,1.04,2.7,2.17,2.84,3.5,1.18,2.85,3.35,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,1.0,2.0,1.55,0.6]},{"n":97,"name":"ゴンさん(HS)","role":"atk","extra":true,"v":[12.0,10.8,1.2,3.63,4.3,1.0,56.0,0.0,[9.0,null],null,null,2.0,0.3,1.2,20.0,4.3,0.94,2.1,1.04,2.7,2.17,2.84,3.5,1.18,2.85,3.35,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,2.0,1.0,2.0,1.55,0.6]},{"n":98,"name":"キルア=ゾルディック","role":"spr","extra":false,"v":[1.3,0.9,0.85,2.73,4.0,1.0,40.0,0.0,[5.3,null],null,null,2.0,1.16,1.67,null,null,0.94,2.1,1.04,2.74,1.44,2.1,3.1,0.9,2.27,3.27,1.25,2.89,0.54,0.94,1.14,1.54,1.67,2.07,4.0,3.0,3.0,null,null]},{"n":99,"name":"チーちゃん","role":"spr","extra":false,"v":[1.0,0.55,0.95,2.67,4.0,1.0,46.0,1.8,[10.0,null],null,null,0.45,1.16,3.46,null,null,1.1,2.77,1.27,3.1,1.45,2.1,2.77,1.04,2.6,3.28,1.83,3.2,0.54,0.94,1.14,1.54,1.67,2.07,3.0,2.0,4.0,null,null]},{"n":100,"name":"チーちゃん(BD)","role":"spr","extra":true,"v":[1.0,0.55,0.95,4.17,4.0,1.0,46.0,1.8,[10.0,null],null,null,0.45,1.16,3.46,null,null,0.94,2.44,1.04,2.7,1.37,1.94,2.6,0.85,2.27,2.95,1.83,3.2,0.54,0.94,1.14,1.54,1.67,2.07,3.0,2.0,4.0,null,1.0]},{"n":101,"name":"上条当麻","role":"spr","extra":false,"v":[1.05,0.5,1.1,2.6,4.0,1.0,48.0,100000.0,[9.5,null],4.0,20.0,2.0,1.16,1.67,null,null,0.89,2.14,1.24,3.34,2.1,2.8,4.04,1.6,3.27,4.96,1.82,2.95,0.54,0.94,1.14,1.54,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":102,"name":"ーペルリニエ","role":"spr","extra":false,"v":[1.1,1.2,0.85,2.52,5.5,1.0,46.0,0.0,[7.0,null],20.0,10.0,0.52,1.16,1.67,null,null,0.97,2.37,1.14,3.04,1.47,2.14,2.9,0.8,1.92,2.6,1.82,3.29,0.54,0.94,1.13,1.53,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":103,"name":"シャドウ","role":"atk","extra":false,"v":[1.4,0.75,0.95,2.54,4.0,1.0,52.0,100000.0,[7.1,null],15.0,null,0.0,0.0,0.0,22.0,5.0,0.94,2.17,1.0,2.57,2.11,2.45,3.78,1.44,3.11,4.28,1.25,2.85,0.55,0.94,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":104,"name":"ポプ子&ピピ美","role":"tnk","extra":false,"v":[1.45,0.9,1.35,2.56,6.4,1.0,34.0,100000.0,[9.7,null],8.0,null,1.4,0.0,0.0,3.0,null,1.0,2.5,1.37,3.7,1.4,2.07,2.7,0.97,2.3,2.84,1.79,3.19,0.55,0.95,1.14,1.54,1.68,2.08,1.0,9.0,1.0,null,null]},{"n":105,"name":"メルーニャ・ランチェルナ","role":"gun","extra":false,"v":[1.0,1.4,0.95,2.56,18.0,1.0,16.0,100000.0,[8.9,"1.3/8.9"],200.0,5.0,2.6,1.5,2.24,54.0,2.0,1.34,3.0,1.5,3.16,1.99,2.66,4.33,1.34,2.67,3.34,1.29,2.92,0.45,0.85,0.94,1.34,1.34,1.74,3.0,9.0,3.0,null,null]},{"n":106,"name":"セイバー","role":"spr","extra":false,"v":[1.35,0.7,1.1,2.67,4.0,1.0,38.0,100000.0,[10.0,null],40.0,12.0,1.3,1.16,1.67,null,null,0.94,2.27,1.6,3.1,1.8,1.8,3.37,1.44,4.27,5.1,1.81,3.19,0.54,0.94,1.14,1.54,1.67,2.07,3.0,2.0,3.0,null,null]},{"n":107,"name":"アーチャー","role":"atk","extra":false,"v":[1.5,1.4,0.95,2.54,5.0,1.0,50.0,100000.0,[10.0,null],28.0,4.0,0.4,0.44,1.2,20.0,8.0,0.96,2.18,1.03,2.63,2.54,3.07,4.2,0.88,1.91,2.84,1.25,3.19,0.54,0.94,1.14,1.54,1.67,2.06,4.0,3.0,4.0,1.0,0.65]},{"n":108,"name":"ランサー","role":"gun","extra":false,"v":[1.2,0.75,0.9,2.47,16.0,0.5,46.0,100000.0,[10.0,null],8.0,null,0.0,0.45,1.2,22.0,3.0,1.57,3.04,1.08,2.94,1.4,2.07,3.1,0.95,2.28,2.94,1.79,3.19,0.54,0.94,1.13,1.55,1.67,2.07,3.0,9.0,3.0,null,null]},{"n":109,"name":"ファースト","role":"tnk","extra":false,"v":[1.4,0.9,1.1,2.54,6.86,1.0,50.0,100000.0,[10.0,null],200.0,4.0,0.0,0.0,0.0,8.0,null,1.44,3.1,1.29,3.09,1.44,2.1,2.87,0.77,1.85,2.38,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":110,"name":"レゼ","role":"gun","extra":false,"v":[1.4,0.85,0.95,2.56,14.0,1.0,54.0,4.0,[7.77,null],42.0,9.6,2.5,0.7,1.7,200.0,0.44,1.0,2.47,1.04,2.64,1.77,2.45,3.44,1.03,2.37,3.2,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,3.0,9.0,3.0,null,null]},{"n":111,"name":"シャルル・リヒター","role":"atk","extra":false,"v":[1.25,1.1,0.95,2.63,4.8,1.0,50.0,5.0,[8.0,null],42.0,8.0,1.7,0.7,1.7,8.0,3.0,0.93,2.09,1.43,2.93,2.17,2.84,3.84,1.6,3.1,4.1,1.79,3.19,0.54,0.94,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":112,"name":"一姫","role":"spr","extra":false,"v":[1.3,0.75,1.05,2.67,4.4,0.7,24.0,100000.0,[8.9,null],8.0,3.0,1.5,1.1,2.0,null,null,0.97,2.1,1.17,2.94,1.5,2.17,2.77,0.85,2.1,2.77,1.82,3.19,0.55,0.94,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]},{"n":113,"name":"エドワード・エルリック","role":"tnk","extra":false,"v":[0.85,1.25,1.45,2.61,5.0,1.0,48.0,100000.0,[7.0,null],46.0,10.0,7.0,0.47,1.2,28.0,1.5,1.0,2.6,1.07,2.77,2.44,3.1,4.1,1.44,2.77,3.77,1.79,3.13,0.54,0.94,1.14,1.54,1.67,2.07,1.0,9.0,1.0,null,null]},{"n":114,"name":"オクトバリ・ニャル・タココ","role":"atk","extra":false,"v":[1.45,0.5,1.05,2.52,6.0,1.0,44.0,100000.0,[6.67,null],32.0,2.0,3.2,0.47,1.2,20.0,1.3,1.37,3.27,1.07,2.84,1.64,2.3,3.37,0.77,1.84,2.34,1.79,3.19,0.55,0.94,1.14,1.54,1.67,2.07,4.0,3.0,4.0,null,null]}]};
 const COLS = DATA.columns;
 const ROLE_ORDER = ["atk", "gun", "spr", "tnk"];
-const state = { sortCol: null, dir: 0, roles: new Set(ROLE_ORDER), q: "", extra: false };
+const narrow = window.matchMedia("(max-width: 640px)").matches;
+const state = {
+  col: 0, dir: 0, view: narrow ? "one" : "all",
+  roles: new Set(ROLE_ORDER), q: "", extra: false,
+};
+// 前回の見方を覚えておく（使えないときは無視）
+try {
+  const saved = JSON.parse(localStorage.getItem("yagi-table") || "null");
+  if (saved && saved.col < COLS.length) Object.assign(state, { col: saved.col, dir: saved.dir, view: saved.view || state.view });
+} catch (e) {}
+function save() {
+  try { localStorage.setItem("yagi-table", JSON.stringify({ col: state.col, dir: state.dir, view: state.view })); } catch (e) {}
+}
 
+const $ = id => document.getElementById(id);
 const thead = document.querySelector("#t thead");
 const tbody = document.querySelector("#t tbody");
-const statusEl = document.getElementById("status");
 
 function fmt(v) {
   if (v === null || v === undefined) return "";
   return Number.isInteger(v) ? String(v) : String(+v.toFixed(3));
 }
-function val(row, i) {
-  const v = row.v[i];
-  return Array.isArray(v) ? v[0] : v;
-}
+function val(row, i) { const v = row.v[i]; return Array.isArray(v) ? v[0] : v; }
+function multi(row, i) { const v = row.v[i]; return Array.isArray(v) && v[1] ? v[1] : ""; }
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
-// 役割フィルタ
-const rolesEl = document.getElementById("roles");
+// 項目の選択肢（グループごと）
+(function buildSelect() {
+  const sel = $("col");
+  let og = null;
+  COLS.forEach((c, i) => {
+    if (!og || og.label !== c.group) { og = document.createElement("optgroup"); og.label = c.group; sel.appendChild(og); }
+    const o = document.createElement("option"); o.value = i; o.textContent = c.label; og.appendChild(o);
+  });
+  sel.addEventListener("change", () => { state.col = +sel.value; if (state.dir === 0) state.dir = -1; render(); });
+})();
+
+$("dir").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.dir = +b.dataset.dir; render();
+});
+$("view").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.view = b.dataset.view; render();
+});
+
 for (const r of ROLE_ORDER) {
   const b = document.createElement("button");
   b.className = "chip"; b.type = "button"; b.id = "role-" + r;
@@ -150,11 +251,11 @@ for (const r of ROLE_ORDER) {
     b.setAttribute("aria-pressed", state.roles.has(r));
     render();
   });
-  rolesEl.appendChild(b);
+  $("roles").appendChild(b);
 }
 
-// 見出し
-function buildHead() {
+// 表の見出し
+(function buildHead() {
   const g = document.createElement("tr"); g.className = "g";
   g.innerHTML = `<th class="stick"></th><th class="stick2"></th>`;
   let i = 0;
@@ -166,85 +267,123 @@ function buildHead() {
     g.appendChild(th); i = j;
   }
   const c = document.createElement("tr"); c.className = "c";
-  c.innerHTML = `<th class="stick" style="text-align:right">${"No."}</th><th class="stick2" style="text-align:left">キャラ</th>`;
+  c.innerHTML = `<th class="stick" style="text-align:right"></th><th class="stick2" style="text-align:left">キャラ</th>`;
   COLS.forEach((col, idx) => {
     const th = document.createElement("th");
     const b = document.createElement("button");
     b.type = "button";
     b.innerHTML = `<span class="arrow"></span>${col.label}`;
     b.addEventListener("click", () => {
-      if (state.sortCol !== idx) { state.sortCol = idx; state.dir = -1; }
+      if (state.col !== idx || state.dir === 0) { state.col = idx; state.dir = -1; }
       else if (state.dir === -1) state.dir = 1;
-      else { state.sortCol = null; state.dir = 0; }
+      else state.dir = 0;
       render();
     });
     th.appendChild(b);
     c.appendChild(th);
   });
   thead.append(g, c);
+})();
+
+function sortedRows() {
+  const q = state.q.trim();
+  const rows = DATA.rows.filter(r =>
+    state.roles.has(r.role) && (state.extra || !r.extra) && (!q || r.name.includes(q)));
+  const i = state.col, d = state.dir;
+  if (d === 0) return rows.sort((a, b) => a.n - b.n);
+  return rows.sort((a, b) => {
+    const x = val(a, i), y = val(b, i);
+    if (x === null && y === null) return a.n - b.n;
+    if (x === null) return 1;
+    if (y === null) return -1;
+    return x === y ? a.n - b.n : (x - y) * d;
+  });
 }
 
-function render() {
-  const q = state.q.trim();
-  let rows = DATA.rows.filter(r =>
-    state.roles.has(r.role) && (state.extra || !r.extra) && (!q || r.name.includes(q)));
-  rows = rows.slice();
-  if (state.sortCol !== null) {
-    const i = state.sortCol, d = state.dir;
-    rows.sort((a, b) => {
-      const x = val(a, i), y = val(b, i);
-      if (x === null && y === null) return a.n - b.n;
-      if (x === null) return 1;
-      if (y === null) return -1;
-      return x === y ? a.n - b.n : (x - y) * d;
-    });
-  } else {
-    rows.sort((a, b) => a.n - b.n);
-  }
+// 順位（同じ値は同じ順位）。実装順のときは実装番号
+function positions(rows) {
+  let prev, rank = 0;
+  return rows.map((r, k) => {
+    if (state.dir === 0) return r.n;
+    const v = val(r, state.col);
+    if (v === null) return "";
+    if (v !== prev) rank = k + 1;
+    prev = v; return rank;
+  });
+}
 
-  // 見出しの表示
+function renderList(rows, pos) {
+  const i = state.col;
+  const nums = rows.map(r => val(r, i)).filter(v => v !== null);
+  const max = Math.max(...nums.map(Math.abs), 0) || 1;
+  $("list").innerHTML = rows.map((r, k) => {
+    const v = val(r, i);
+    const top = state.dir !== 0 && pos[k] !== "" && pos[k] <= 3;
+    const m = multi(r, i);
+    const w = v === null ? 0 : Math.max(2, Math.abs(v) / max * 100);
+    return `<li class="${top ? "top" : ""}">
+      <span class="pos">${pos[k]}</span>
+      <span class="nm"><span class="role" style="background:var(--${r.role})" title="${DATA.roles[r.role]}"></span>${esc(r.name)}${r.extra ? "<small>別形態</small>" : ""}</span>
+      <span class="val${v === null ? " empty" : ""}">${v === null ? "—" : fmt(v)}${m ? `<span class="multi">${m}</span>` : ""}</span>
+      <span class="bar"><i style="width:${w}%"></i></span>
+    </li>`;
+  }).join("");
+}
+
+function renderTable(rows, pos) {
+  const sc = state.dir === 0 ? -1 : state.col;
   thead.querySelectorAll("tr.c th").forEach((th, k) => {
     const idx = k - 2;
     if (idx < 0) return;
-    const on = idx === state.sortCol;
+    const on = idx === sc;
     th.classList.toggle("sorted", on);
     th.querySelector(".arrow").textContent = on ? (state.dir === -1 ? "▼" : "▲") : "";
-    th.querySelector("button").setAttribute("aria-label",
-      COLS[idx].label + (on ? (state.dir === -1 ? "（大きい順）" : "（小さい順）") : ""));
   });
-
-  // 同じ値は同じ順位
-  let prev, rank = 0;
-  const html = rows.map((r, k) => {
-    let first;
-    if (state.sortCol !== null) {
-      const v = val(r, state.sortCol);
-      if (v === null) first = "";
-      else { if (v !== prev) rank = k + 1; prev = v; first = rank; }
-    } else first = r.n;
+  thead.querySelector("tr.c th.stick").textContent = state.dir === 0 ? "No." : "順位";
+  tbody.innerHTML = rows.map((r, k) => {
     const cells = COLS.map((_, i) => {
-      const raw = r.v[i];
-      const v = Array.isArray(raw) ? raw[0] : raw;
-      const extra = Array.isArray(raw) && raw[1] ? `<span class="multi">(${raw[1]})</span>` : "";
+      const v = val(r, i), m = multi(r, i);
       const cls = ["num"];
       if (v === null) cls.push("empty");
-      if (i === state.sortCol) cls.push("sorted");
-      return `<td class="${cls.join(" ")}">${v === null ? "—" : fmt(v) + extra}</td>`;
+      if (i === sc) cls.push("sorted");
+      return `<td class="${cls.join(" ")}">${v === null ? "—" : fmt(v) + (m ? `<span class="multi">(${m})</span>` : "")}</td>`;
     }).join("");
-    return `<tr><td class="rank stick">${first}</td><td class="name stick2"><span class="role" style="background:var(--${r.role})" title="${DATA.roles[r.role]}"></span>${r.name}${r.extra ? "<small>別形態</small>" : ""}</td>${cells}</tr>`;
+    return `<tr><td class="rank stick">${pos[k]}</td><td class="name stick2"><span class="role" style="background:var(--${r.role})" title="${DATA.roles[r.role]}"></span>${esc(r.name)}${r.extra ? "<small>別形態</small>" : ""}</td>${cells}</tr>`;
   }).join("");
-  tbody.innerHTML = html;
-
-  const sortTxt = state.sortCol === null ? "実装順" :
-    `${COLS[state.sortCol].label}の${state.dir === -1 ? "大きい順" : "小さい順"}`;
-  statusEl.innerHTML = `<b>${rows.length}</b> キャラ・${sortTxt}`;
-  thead.querySelector("tr.c th.stick").textContent = state.sortCol === null ? "No." : "順位";
 }
 
-document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; render(); });
-document.getElementById("extra").addEventListener("change", e => { state.extra = e.target.checked; render(); });
-document.getElementById("reset").addEventListener("click", () => { state.sortCol = null; state.dir = 0; render(); });
+let lastScrolledCol = null;
+function render() {
+  const rows = sortedRows();
+  const pos = positions(rows);
 
-buildHead();
+  $("col").value = state.col;
+  $("dir").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.dir === state.dir));
+  $("view").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === state.view));
+
+  $("list").hidden = state.view !== "one";
+  $("tableBox").hidden = state.view !== "all";
+  if (state.view === "one") renderList(rows, pos); else renderTable(rows, pos);
+
+  // 表のとき、選んだ項目の列が見えるように横スクロール
+  if (state.view === "all" && state.col !== lastScrolledCol) {
+    const th = thead.querySelectorAll("tr.c th")[state.col + 2];
+    const box = $("tableBox");
+    const stickW = thead.querySelector("tr.c th.stick2").getBoundingClientRect().right - box.getBoundingClientRect().left;
+    const left = th.offsetLeft - stickW - 8;
+    if (th.offsetLeft < box.scrollLeft + stickW || th.offsetLeft + th.offsetWidth > box.scrollLeft + box.clientWidth) {
+      box.scrollLeft = Math.max(0, left);
+    }
+    lastScrolledCol = state.col;
+  }
+
+  const sortTxt = state.dir === 0 ? "実装順" : `${COLS[state.col].label}の${state.dir === -1 ? "大きい順" : "小さい順"}`;
+  $("status").innerHTML = `<b>${rows.length}</b> キャラ・${sortTxt}`;
+  save();
+}
+
+$("q").addEventListener("input", e => { state.q = e.target.value; render(); });
+$("extra").addEventListener("change", e => { state.extra = e.target.checked; render(); });
+
 render();
 </script>
